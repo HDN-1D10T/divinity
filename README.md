@@ -16,5 +16,5 @@
 |------------------|--------|-----------------------------|------|
 |`-config`         |none    |path to a JSON config file   |string|
 |`-webconfig`      |none    |URL to a JSON config file    |string|
-|`-list`           |none    |supply list of IPs (`-list -` or `-list stdin` allows processing from `stdin` instead of a file|string|
+|`-list`           |none    |supply list of IPs (`-list -` or `-list stdin` allows processing from `stdin` instead of a file)|string|
 |`-range`          |none    |specify a CIDR range of IP addresses|string
