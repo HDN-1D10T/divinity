@@ -1,5 +1,5 @@
 ![enter image description here](https://img.shields.io/badge/platform-ALL-green)
-# Project Divinity
+# HAKDEFNET / 1D10T's Project Divinity
 
 **Divinity** is an ever-expanding framework that can be used for multiple purposes.  It *integrates, but does not rely* on **Shodan** for some of its features, the main function of which is to test over HTTP/HTTPS and report IPs that are using **default credentials**.
 
