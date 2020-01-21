@@ -106,7 +106,7 @@ If you wanted to do everything in one go, just make sure to save your results wi
 `divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -alert "*** DEFAULT ***" -output manufacturer_b_default_creds.txt`
 
 #### Shodan-less Example - Check internal app tier for default credentials:
-Let's say you have a numerous applications running a specific framework that you have created a configuration file for.  These applications are running in your DMZ on the 10.2.2.0/24 network.  As long as you have access to these applications, you can run the following command to test for default credentials:
+Let's say you have a numerous applications running a specific framework for which you have created a configuration file.  These applications are running in your DMZ on the 10.2.2.0/24 network.  As long as you have access to these applications, you can run the following command to test for default credentials:
 
 `divinity -config /path/to/app.json -range 10.2.2.0/24 -output dmz_default_creds.txt`
 
