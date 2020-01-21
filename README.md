@@ -2,10 +2,6 @@
 # HAKDEFNET / 1D10T's Project Divinity
 
 **Divinity** is an ever-expanding HDN-Offensive Security Framework that can be used for multiple security research purposes.
-It *can integrate with online search tools, but does not rely* on them, an example being **Shodan** for some of its features,
-the main function of which is to test over HTTP/HTTPS and report IPs that are using **default credentials**.
-=======
-**Divinity** is an ever-expanding HDN-Offensive Security Framework that can be used for multiple security research purposes.
 It *can integrate with online search tools, but does not rely* on them.  An example of one of those services is **Shodan** for some of its features,
 with the main function of which is to test over HTTP/HTTPS and report IPs that are using **default credentials**. 
 
