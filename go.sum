@@ -1,8 +1,8 @@
-github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121225956-0dbb22ce2a05 h1:T6ydTELWvWlEZoxVRtcItOkBzkCdlfTZK4FzUUfydmw=
-github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121225956-0dbb22ce2a05/go.mod h1:2EJBb5qWQ+ErXu9nh7cCvK5/9Yl18QkfgvLTJvT6h0M=
-github.com/HDN-1D10T/Divinity/src/masscan v0.0.0-20200121225956-0dbb22ce2a05 h1:lJE1p8yUDJMtfAl51xy3WbL49bf8K7EtWL0kf/npZio=
-github.com/HDN-1D10T/Divinity/src/masscan v0.0.0-20200121225956-0dbb22ce2a05/go.mod h1:/H+bswu3aRFtjkCRjLfTG2jdcpdXURUUTX3fS5qq1A8=
-github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121225956-0dbb22ce2a05 h1:hFdstJmNzCwRaNyx19KUixMVFcTY854v/hmPYbhqGas=
-github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121225956-0dbb22ce2a05/go.mod h1:AIG02tfFv/keTe5BSmD4VyOBnMfrlZ3F+0t/5r5+eTs=
+github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121230454-b2de9b439ea9 h1:vWFyNuk0+CP2CMH/kOEAMfW4vaBWYZaedTauhYxWR48=
+github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121230454-b2de9b439ea9/go.mod h1:2EJBb5qWQ+ErXu9nh7cCvK5/9Yl18QkfgvLTJvT6h0M=
+github.com/HDN-1D10T/Divinity/src/masscan v0.0.0-20200121230454-b2de9b439ea9 h1:pRsBRAHk0ipRyxhIrayI+CuV1GjXYx3FmxMUJDgSR2I=
+github.com/HDN-1D10T/Divinity/src/masscan v0.0.0-20200121230454-b2de9b439ea9/go.mod h1:/H+bswu3aRFtjkCRjLfTG2jdcpdXURUUTX3fS5qq1A8=
+github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121230454-b2de9b439ea9 h1:lOURad7WSFbnMUDMgwckKrA5etnMz2wu4GxfgqDTwAY=
+github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121230454-b2de9b439ea9/go.mod h1:AIG02tfFv/keTe5BSmD4VyOBnMfrlZ3F+0t/5r5+eTs=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
