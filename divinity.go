@@ -179,6 +179,19 @@ func mScan(cidr string) {
 	m.SetRanges(cidr)
 	m.SetRate("2000")
 	m.SetExclude("127.0.0.1")
+	err := m.Run()
+	if err != nil {
+		fmt.Println("scanner failed", err)
+		return
+	}
+	results, err := m.Parse()
+	if err != nil {
+		fmt.Println("Scan Results:", err)
+		return
+	}
+	for _, result := range results {
+		fmt.Println(result)
+	}
 }
 
 func main() {
