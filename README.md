@@ -19,7 +19,7 @@ If you would like to know more about Hakdefnet, then check out the site at [http
 
 Enjoy and contribute!
 
-**-- Your 1D10T / PHX / HDN Team**
+*-- Your 1D10T / PHX / HDN Team*
 
 ## Ways to run Divinity
 
