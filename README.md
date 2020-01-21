@@ -36,7 +36,7 @@ Enjoy and contribute!
 |`-config`|path to a JSON config file   |
 |`-webconfig`|URL to a JSON config file    |
 |`-list`|path to list of IPs (value `-` or `stdin` allows processing from `stdin` instead of file)|
-|`-range`|specify a CIDR range of IP addresses to run login tests against|
+|`-range`|specify a CIDR range of IP addresses to run login tests or scan against|
 |`-output`|specify file name or file path to save results 
 |`-protocol`|specify if login target uses `HTTP` or `HTTPS` (`TCP` option coming soon)|
 |`-port`|specify port used by login target|
@@ -48,7 +48,8 @@ Enjoy and contribute!
 |`-headername`|specify an additional HTTP request header name|
 |`-headervalue`|specify an additional HTTP request header value when used with `-headername [NAME]`|
 |`-success`|string to match on that *ONLY* appears in successful login response|
-|`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)
+|`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
+|`-scan`|actively scan IP range using masscan (requires sudo, masscan, and `-range`)|
 ---
 ### Shodan Configuration Parameters (optional):
 If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
