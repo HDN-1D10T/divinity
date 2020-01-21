@@ -4,6 +4,16 @@
 **Divinity** is an ever-expanding HDN-Offensive Security Framework that can be used for multiple security research purposes.
 It *can integrate with online search tools, but does not rely* on them, an example being **Shodan** for some of its features,
 the main function of which is to test over HTTP/HTTPS and report IPs that are using **default credentials**.
+=======
+**Divinity** is an ever-expanding HDN-Offensive Security Framework that can be used for multiple security research purposes.
+It *can integrate with online search tools, but does not rely* on them.  An example of one of those services is **Shodan** for some of its features,
+with the main function of which is to test over HTTP/HTTPS and report IPs that are using **default credentials**. 
+
+Many people install basic and advanced services like NetScaler, SAP, Firewalls and Routers without changing default passwords,
+this fact makes all these implementations faulty and vulnerable to very simple attacks. Any scriptkiddie with a hacking GUI based tool
+or pentesting image can search known lists and break into your devices easily without any real knowledge.
+We wanted to level the playing field here as many critical infrastructure systems also have the same problems and this needs to stop
+(config errors, using standard credentials) because this is irresponsible and unsafe in this period of cyber warfare and espionage.
 
 We hope that by making this public, we can help people to test thier own systems using this opensource framework, which we decided
 to release to the world in an effort to make it better and widely-used in order to increase security awareness, and hopefully security itself.
