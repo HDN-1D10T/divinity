@@ -21,6 +21,10 @@ Enjoy and contribute!
 
 *-- Your 1D10T / PHX / HDN Team*
 
+## Installation
+
+`go get github.com/HDN-1D10T/Divinity`
+
 ## Ways to run Divinity
 - **local JSON config file** (specified by `-config [FILE PATH]`)
 - **remote JSON config file** (specified by `-webconfig [URL]`)
