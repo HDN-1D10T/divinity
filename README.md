@@ -49,6 +49,7 @@ Enjoy and contribute!
 ### Shodan Configuration Parameters (optional):
 If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
 This can be exported on the command line or sourced in your `~/.bashrc`, etc.
+
 |Shodan Parameters |Value Description|                   
 |------------------|-----------------|
 |`-query`|Shodan search string|
