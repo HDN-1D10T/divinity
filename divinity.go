@@ -39,8 +39,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HDN-1D10T/Divinity/config"
-	"github.com/HDN-1D10T/Divinity/shodan"
+	"github.com/HDN-1D10T/Divinity/src/config"
+	"github.com/HDN-1D10T/Divinity/src/shodan"
 )
 
 // Configuration imported from src/config
