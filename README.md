@@ -22,16 +22,90 @@ Enjoy and contribute!
 *-- Your 1D10T / PHX / HDN Team*
 
 ## Ways to run Divinity
-
 - **local JSON config file** (specified by `-config [FILE PATH]`)
 - **remote JSON config file** (specified by `-webconfig [URL]`)
 - **command line parameters** (which will *override* any duplicate parameters if config is also specified) 
-
 ---
+### Configuration Parameters:
+|Normal Parameters |Value Description|                   
+|----------------|-----------------|
+|`-config`|path to a JSON config file   |
+|`-webconfig`|URL to a JSON config file    |
+|`-list`|path to list of IPs (value `-` or `stdin` allows processing from `stdin` instead of file)|
+|`-range`|specify a CIDR range of IP addresses to run login tests against|
+|`-output`|specify file name or file path to save results 
+|`-protocol`|specify if login target uses `HTTP` or `HTTPS` (`TCP` option coming soon)|
+|`-port`|specify port used by login target|
+|`-path`|specify URL path to login page (default: `"/"`)|
+|`-method`|specify HTTP method (usually `GET` or `POST`)|
+|`-basic-auth`|if basic auth is needed, value should be plain-text `username:password` format|
+|`-content`|value of `Content-Type` header when used with `-method POST`|
+|`-data`|payload body when used with `-method POST`|
+|`-headername`|specify an additional HTTP request header name|
+|`-headervalue`|specify an additional HTTP request header value when used with `-headername [NAME]`|
+|`-success`|string to match on that *ONLY* appears in successful login response|
+|`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)
+---
+### Shodan Configuration Parameters (optional):
+If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
+This can be exported on the command line or sourced in your `~/.bashrc`, etc.
+|Shodan Parameters |Value Description|                   
+|------------------|-----------------|
+|`-query`|Shodan search string|
+|`-pages`|Number `[type: int]` of page results to display. Best practice is to use this flag manually as to not use unnecessary query credits (default: `1`)|
+|`-passive`|If this flag is set, only IPs along with associated countries will be displayed, without testing them for default credentials|
+|`-ips`|If this flag is set, *ONLY* a list of IPs will be returned in the output that matches the `-query` value (requires `-passive`). This option is good for searching a large number of `-pages` along with the `-output` parameter set, so that you can later run the tool multiple times using the `-list` parameter without an additional increment to your Shodan query credits.
+---
+## Example Configurations
+The following configurations can be referenced locally with the `-config` parameter or hosted remotely and referenced with the `-webconfig` parameter.  Command line parameters will override any existing parameters included in the JSON configurations.
 
-|Config Parameters |Default |Description                  |Type  |                     
-|------------------|--------|-----------------------------|------|
-|`-config`         |none    |path to a JSON config file   |string|
-|`-webconfig`      |none    |URL to a JSON config file    |string|
-|`-list`           |none    |supply list of IPs (`-list -` or `-list stdin` allows processing from `stdin` instead of a file)|string|
-|`-range`          |none    |specify a CIDR range of IP addresses|string
+#### Basic-Auth GET Request (Device Manufacturer A):
+- The following configuration would search for "Device Manufacturer A" listening on port 80 at `http://[IP ADDRESS]/login.html` and would return 1 page of Shodan results containing 100 IPs.
+- An HTTP GET request would be sent with basic authentication with the credentials `admin:password` to all 100 IPs from the results.
+- If the string `authenticated.html` is found in the HTTP response, the alert `*** DEFAULT CREDENTIALS ***` will be displayed next to the IP address in the output.
+
+```
+{
+    "query": "Device Manufacturer A port:80",
+    "protocol": "http",
+    "port": "80",
+    "path": "/login.html",
+    "method": "GET",
+    "basic-auth": "admin:password",
+    "success": "authenticated.html",
+    "alert": "*** DEFAULT CREDENTIALS ***"
+}
+```
+
+#### POST Request (Device Manufacturer B):
+- The following configuration would search for "device manufacturer 2" listening on port 8443 at `https://[IP ADDRESS]:8443/data/login` and would return 1 page of results, containing 100 IPs.
+- An HTTP POST request would be sent with the credentials `admin:password` as form data to all 100 IPs.
+- If the string `<authResult>0</authResult>` is found in the HTTP response, the alert `SUCCESS` will be displayed next to the IP address in the output (since `-alert` has a default value of `SUCCESS`, it doesn't have to be explicitly specified in the configuration.
+
+```
+{
+    "query": "Device Manufacturer B port:8443",
+    "protocol": "https",
+    "port": "8443",
+    "path": "/data/login",
+    "method": "POST",
+    "content": "application/x-www-form-url-encoded",
+    "success": "<authResult>0</authResult>"
+}
+```
+#### Example - Check 500 results from Device Manufacturer B for default credentials:
+Let's say you wanted to get 500 IP results from Device Manufacturer B, and you have the config stored in a directory on the web along with additional configs you have created for finding different devices.  You want to store these IPs for later use without increasing your Shodan API query credits.
+
+You could use the following command to save a list of just the IP addresses to subsequently feed back into the application using the `-list` parameter, which would override the call to the Shodan API on the second run:
+
+`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -passive -ips -output manufacturer_b_ips.txt`
+
+If you wanted to do everything in one go, just make sure to save your results with the `-output` parameter.  Let's also say that you want to include the text `*** DEFAULT ***` next to the successful attempts.  The output file will include only the IPs with successful default logins.
+
+`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -alert "*** DEFAULT ***" -output manufacturer_b_default_creds.txt`
+
+#### Shodan-less Example - Check internal app tier for default credentials:
+Let's say you have a numerous applications running a specific framework that you have created a configuration file for.  These applications are running in your DMZ on the 10.2.2.0/24 network.  As long as you have access to these applications, you can run the following command to test for default credentials:
+
+`divinity -config /path/to/app.json -range 10.2.2.0/24 -output dmz_default_creds.txt`
+
