@@ -29,6 +29,7 @@ type Options struct {
 	Success     *string `json:"success"`
 	Alert       *string `json:"alert"`
 	OutputFile  *string `json:"output"`
+	Scan        *bool   `json:"scan"`
 }
 
 // Options for Configuration
@@ -52,6 +53,7 @@ var (
 		Success:     flag.String("success", "", "string match for successful login"),
 		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
 		OutputFile:  flag.String("output", "", "/path/to/outputfile"),
+		Scan:        flag.Bool("scan", false, "set if you want to show open ports"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
 	WebConfig   = flag.String("webconfig", "", "Needs URL to config.json as argument")
