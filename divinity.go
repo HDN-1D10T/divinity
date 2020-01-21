@@ -26,7 +26,6 @@ package main
 
 import (
 	"bufio"
-	"config"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
@@ -35,11 +34,13 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"shodan"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/HDN-1D10T/Divinity/config"
+	"github.com/HDN-1D10T/Divinity/shodan"
 )
 
 // Configuration imported from src/config
