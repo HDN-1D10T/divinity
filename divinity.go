@@ -1,3 +1,27 @@
+/*
+##############################################################################
+#    Copyright (C) 2020  Hakdefnet International <https://hakdefnet.org>
+#
+#    Authors:
+#    phx <https://github.com/phx>
+#    1D10T <https://github.com/HDN-1D10T>
+#
+#    This program free software licensed under Creative Commons BY-NC-ND 4.0.
+#    You can redistribute it and/or modify it under the terms of the
+#    Attribution-NonCommerical-NoDerivatives 4.0 International License,
+#    as published by Creative Commons.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#    See CC Attribution-NonCommerical-NoDerivatives 4.0 International License
+#    for more details.
+#
+#    You should have received a copy of the CC BY-NC-ND 4.0 License along with
+#    this program.  If not, see <https://creativecommons.org/licenses/>.
+##############################################################################
+*/
+
 package main
 
 import (
