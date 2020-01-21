@@ -1,4 +1,4 @@
-github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121202212-690d51487047 h1:MWfUwptm7S4hQhESKpTwnDYX97WsSVuRCLzPAjtVcog=
-github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121202212-690d51487047/go.mod h1:2EJBb5qWQ+ErXu9nh7cCvK5/9Yl18QkfgvLTJvT6h0M=
-github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121202212-690d51487047 h1:LqqfgBCnsvhHxq6tEsGX3EjI5OgMJbB1iqvANOixwr8=
-github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121202212-690d51487047/go.mod h1:AIG02tfFv/keTe5BSmD4VyOBnMfrlZ3F+0t/5r5+eTs=
+github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121210458-43ea12cd61f2 h1:+1z+XO/cEdB0vUzoyO7rvvo5Ro4E87l5IUGyp8m5YRk=
+github.com/HDN-1D10T/Divinity/src/config v0.0.0-20200121210458-43ea12cd61f2/go.mod h1:2EJBb5qWQ+ErXu9nh7cCvK5/9Yl18QkfgvLTJvT6h0M=
+github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121210458-43ea12cd61f2 h1:cUsGQjcuUavIb7rk8z9NWs4LbGCQLSTBKkxQUnu0zRU=
+github.com/HDN-1D10T/Divinity/src/shodan v0.0.0-20200121210458-43ea12cd61f2/go.mod h1:AIG02tfFv/keTe5BSmD4VyOBnMfrlZ3F+0t/5r5+eTs=

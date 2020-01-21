@@ -181,7 +181,10 @@ func main() {
 	list := *conf.List
 	shodanSearch := *conf.SearchTerm
 	passive := *conf.Passive
+	scan := *conf.Scan
 	cidr := *conf.Cidr
+	ipsOnly := *conf.IPOnly
+	outputFile := *conf.OutputFile
 	if len(cidr) > 0 {
 		//Process IPs from CIDR range
 		ips, _ := getIPsFromCIDR(cidr)
@@ -221,11 +224,9 @@ func main() {
 		wg.Wait()
 	} else if passive {
 		// Process list from Shodan
-		ipsOnly := *conf.IPOnly
 		apiKey := os.Getenv("SHODAN_API_KEY")
 		s := shodan.New(apiKey)
 		info, err := s.APIInfo()
-		outputFile := *conf.OutputFile
 		check(err)
 		// Get Shodan IP Results
 		if !ipsOnly {
@@ -251,20 +252,28 @@ func main() {
 				}
 			} else {
 				for _, host := range hostSearch.Matches {
-					msg := host.IPString + "\t\t" + host.Location.CountryName
-					fmt.Println(msg)
-					if len(outputFile) > 0 {
-						filewrite(msg, outputFile)
+					if scan {
+						msg := host.IPString + "\t\t" + strconv.Itoa(host.Port)
+						fmt.Println(msg)
+						if len(outputFile) > 0 {
+							filewrite(msg, outputFile)
+						}
+					} else {
+						msg := host.IPString + "\t\t" + host.Location.CountryName
+						fmt.Println(msg)
+						if len(outputFile) > 0 {
+							filewrite(msg, outputFile)
+						}
 					}
 				}
 			}
 		}
 	} else if len(shodanSearch) > 0 {
+		// Get Shodan IP Results
 		apiKey := os.Getenv("SHODAN_API_KEY")
 		s := shodan.New(apiKey)
 		info, err := s.APIInfo()
 		check(err)
-		// Get Shodan IP Results
 		fmt.Printf(
 			"Query Credits:\t%d\nScan Credits:\t%d\n\n",
 			info.QueryCredits,
