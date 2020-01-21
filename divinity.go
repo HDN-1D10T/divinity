@@ -40,6 +40,7 @@ import (
 	"time"
 
 	"github.com/HDN-1D10T/Divinity/src/config"
+	"github.com/HDN-1D10T/Divinity/src/masscan"
 	"github.com/HDN-1D10T/Divinity/src/shodan"
 )
 
@@ -172,6 +173,14 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	m.RUnlock()
 }
 
+func mScan(cidr string) {
+	m := masscan.New()
+	m.SetPorts("0-65535")
+	m.SetRanges(cidr)
+	m.SetRate("2000")
+	m.SetExclude("127.0.0.1")
+}
+
 func main() {
 	runtime.GOMAXPROCS(100)
 	var wg = sync.WaitGroup{}
@@ -186,13 +195,17 @@ func main() {
 	ipsOnly := *conf.IPOnly
 	outputFile := *conf.OutputFile
 	if len(cidr) > 0 {
-		//Process IPs from CIDR range
-		ips, _ := getIPsFromCIDR(cidr)
-		wg.Add(len(ips))
-		for _, host := range ips {
-			go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
+		if scan {
+			mScan(cidr)
+		} else {
+			//Process IPs from CIDR range
+			ips, _ := getIPsFromCIDR(cidr)
+			wg.Add(len(ips))
+			for _, host := range ips {
+				go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
+			}
+			wg.Wait()
 		}
-		wg.Wait()
 	} else if len(list) == 1 || list == "stdin" {
 		// Process list from stdin
 		scanner := bufio.NewScanner(os.Stdin)
@@ -252,18 +265,10 @@ func main() {
 				}
 			} else {
 				for _, host := range hostSearch.Matches {
-					if scan {
-						msg := host.IPString + "\t\t" + strconv.Itoa(host.Port)
-						fmt.Println(msg)
-						if len(outputFile) > 0 {
-							filewrite(msg, outputFile)
-						}
-					} else {
-						msg := host.IPString + "\t\t" + host.Location.CountryName
-						fmt.Println(msg)
-						if len(outputFile) > 0 {
-							filewrite(msg, outputFile)
-						}
+					msg := host.IPString + "\t\t" + host.Location.CountryName
+					fmt.Println(msg)
+					if len(outputFile) > 0 {
+						filewrite(msg, outputFile)
 					}
 				}
 			}
