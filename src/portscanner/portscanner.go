@@ -1,10 +1,15 @@
-package main
+package portscanner
 
 import (
 	"fmt"
 	"net"
 	"sort"
+
+	"github.com/HDN-1D10T/divinity/src/config"
 )
+
+// Configuration imported from src/config
+type Configuration struct{ config.Options }
 
 func worker(ports, results chan int) {
 	for p := range ports {
@@ -19,7 +24,7 @@ func worker(ports, results chan int) {
 	}
 }
 
-func main() {
+func portscanner() {
 	ports := make(chan int, 100)
 	results := make(chan int)
 	var openports []int
