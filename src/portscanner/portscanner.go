@@ -51,6 +51,13 @@ func Scan(host string, portString string) {
 				openports = append(openports, port)
 			}
 		}
+		close(ports)
+		close(results)
+		sort.Ints(openports)
+		for _, port := range openports {
+			host := host
+			fmt.Printf("%s:%d\n", host, port)
+		}
 	} else {
 		thePort, _ := strconv.Atoi(portString)
 		ports <- thePort
@@ -58,17 +65,12 @@ func Scan(host string, portString string) {
 		if port != 0 {
 			openports = append(openports, port)
 		}
-	}
-	close(ports)
-	close(results)
-	sort.Ints(openports)
-	if len(openports) > 1 {
-		for _, port := range openports {
+		close(ports)
+		close(results)
+		sort.Ints(openports)
+		for range openports {
 			host := host
-			fmt.Printf("%s:%d\n", host, port)
+			fmt.Printf("%s\n", host)
 		}
-	} else if len(openports) > 0 {
-		host := host
-		fmt.Printf("%s\n", host)
 	}
 }
