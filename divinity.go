@@ -233,7 +233,7 @@ func main() {
 						go func() {
 							portscanner.Scan(host, port)
 						}()
-						time.Sleep(100 * time.Microsecond)
+						time.Sleep(500 * time.Millisecond)
 					} else {
 						// Scan 1024 ports
 						go func() {
