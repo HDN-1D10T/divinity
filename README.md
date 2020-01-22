@@ -49,7 +49,7 @@ Enjoy and contribute!
 |`-headervalue`|specify an additional HTTP request header value when used with `-headername [NAME]`|
 |`-success`|string to match on that *ONLY* appears in successful login response|
 |`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
-|`-scan`|actively scan IP range using masscan (requires `sudo`, `masscan`, and `-cidr`)|
+|`-scan`|actively scan IP range (if used with -masscan, requires `sudo`, `masscan`, and `-cidr`)|
 ---
 ### Shodan Configuration Parameters (optional):
 If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
