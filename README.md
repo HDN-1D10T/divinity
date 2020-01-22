@@ -23,7 +23,7 @@ Enjoy and contribute!
 
 ## Installation
 
-`go get github.com/HDN-1D10T/Divinity`
+`go get github.com/HDN-1D10T/divinity`
 
 ## Ways to run Divinity
 - **local JSON config file** (specified by `-config [FILE PATH]`)
@@ -55,12 +55,12 @@ Enjoy and contribute!
 If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
 This can be exported on the command line or sourced in your `~/.bashrc`, etc.
 
-|Shodan Parameters |Value Description|                   
-|------------------|-----------------|
-|`-query`|Shodan search string|
-|`-pages`|Number `[type: int]` of page results to display. Best practice is to use this flag manually as to not use unnecessary query credits (default: `1`)|
-|`-passive`|If this flag is set, only IPs along with associated countries will be displayed, without testing them for default credentials|
-|`-ips`|If this flag is set, *ONLY* a list of IPs will be returned in the output that matches the `-query` value (requires `-passive`). This option is good for searching a large number of `-pages` along with the `-output` parameter set, so that you can later run the tool multiple times using the `-list` parameter without an additional increment to your Shodan query credits.
+|Parameters |Value Description|                   
+|-----------|-----------------|
+|`-query`   |Shodan search string|
+|`-pages`   |Number `[type: int]` of page results to display. Best practice is to use this flag manually as to not use unnecessary query credits (default: `1`)|
+|`-passive` |If this flag is set, only IPs along with associated countries will be displayed, without testing them for default credentials|
+|`-ips`     |If this flag is set, *ONLY* a list of IPs will be returned in the output that matches the `-query` value (requires `-passive`). This option is good for searching a large number of `-pages` along with the `-output` parameter set, so that you can later run the tool multiple times using the `-list` parameter without an additional increment to your Shodan query credits.
 ---
 ## Example Configurations
 The following configurations can be referenced locally with the `-config` parameter or hosted remotely and referenced with the `-webconfig` parameter.  Command line parameters will override any existing parameters included in the JSON configurations.
