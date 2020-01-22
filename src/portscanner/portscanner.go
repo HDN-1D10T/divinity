@@ -51,6 +51,7 @@ func Scan(host string) {
 	close(results)
 	sort.Ints(openports)
 	for _, port := range openports {
-		fmt.Printf("%d open\n", port)
+		host := host
+		fmt.Printf("%s %d\n", host, port)
 	}
 }
