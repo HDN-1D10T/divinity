@@ -39,9 +39,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HDN-1D10T/Divinity/src/config"
-	"github.com/HDN-1D10T/Divinity/src/masscan"
-	"github.com/HDN-1D10T/Divinity/src/shodan"
+	"github.com/HDN-1D10T/divinity/src/config"
+	"github.com/HDN-1D10T/divinity/src/masscan"
+	"github.com/HDN-1D10T/divinity/src/shodan"
 )
 
 // Configuration imported from src/config

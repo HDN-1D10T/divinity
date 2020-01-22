@@ -1,1 +1,1 @@
-module github.com/HDN-1D10T/Divinity/src/config
+module github.com/HDN-1D10T/divinity/src/config
