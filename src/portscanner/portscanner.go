@@ -17,7 +17,7 @@ func worker(ports, results chan int, host string) {
 	for p := range ports {
 		//fmt.Printf("Trying %s:%d...\n", host, p)
 		address := fmt.Sprintf("%s:%d", host, p)
-		conn, err := net.DialTimeout("tcp", address, 120*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", address, 500*time.Millisecond)
 		if err != nil {
 			results <- 0
 			continue
