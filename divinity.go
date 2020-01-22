@@ -218,6 +218,7 @@ func main() {
 	cidr := *conf.Cidr
 	ipsOnly := *conf.IPOnly
 	outputFile := *conf.OutputFile
+	port := *conf.Port
 	if len(cidr) > 0 {
 		//Process IPs from CIDR range
 		ips, _ := getIPsFromCIDR(cidr)
@@ -227,7 +228,19 @@ func main() {
 				os.Exit(0)
 			} else {
 				for _, host := range ips {
-					portscanner.Scan(host)
+					if len(port) > 1 {
+						// Scan single port
+						go func() {
+							portscanner.Scan(host, port)
+						}()
+						time.Sleep(100 * time.Microsecond)
+					} else {
+						// Scan 1024 ports
+						go func() {
+							portscanner.Scan(host, "all")
+						}()
+						time.Sleep(500 * time.Millisecond)
+					}
 				}
 			}
 		} else {
