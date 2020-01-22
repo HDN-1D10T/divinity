@@ -36,7 +36,7 @@ Enjoy and contribute!
 |`-config`|path to a JSON config file   |
 |`-webconfig`|URL to a JSON config file    |
 |`-list`|path to list of IPs (value `-` or `stdin` allows processing from `stdin` instead of file)|
-|`-range`|specify a CIDR range of IP addresses to run login tests or scan against|
+|`-cidr`|specify a CIDR range of IP addresses to run login tests or scan against|
 |`-output`|specify file name or file path to save results 
 |`-protocol`|specify if login target uses `HTTP` or `HTTPS` (`TCP` option coming soon)|
 |`-port`|specify port used by login target|
@@ -49,7 +49,7 @@ Enjoy and contribute!
 |`-headervalue`|specify an additional HTTP request header value when used with `-headername [NAME]`|
 |`-success`|string to match on that *ONLY* appears in successful login response|
 |`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
-|`-scan`|actively scan IP range using masscan (requires `sudo`, `masscan`, and `-range`)|
+|`-scan`|actively scan IP range using masscan (requires `sudo`, `masscan`, and `-cidr`)|
 ---
 ### Shodan Configuration Parameters (optional):
 If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
@@ -113,5 +113,5 @@ If you wanted to do everything in one go, just make sure to save your results wi
 #### Shodan-less Example - Check internal app tier for default credentials:
 Let's say you have a numerous applications running a specific framework for which you have created a configuration file.  These applications are running in your DMZ on the 10.2.2.0/24 network.  As long as you have access to these applications, you can run the following command to test for default credentials:
 
-`divinity -config /path/to/app.json -range 10.2.2.0/24 -output dmz_default_creds.txt`
+`divinity -config /path/to/app.json -cidr 10.2.2.0/24 -output dmz_default_creds.txt`
 

@@ -12,7 +12,7 @@ import (
 // Options struct for Configuration
 type Options struct {
 	List        *string `json:"list"`
-	Cidr        *string `json:"range"`
+	Cidr        *string `json:"cidr"`
 	SearchTerm  *string `json:"query"`
 	Pages       *int    `json:"pages"`
 	Passive     *bool   `json:"passive"`
@@ -30,13 +30,14 @@ type Options struct {
 	Alert       *string `json:"alert"`
 	OutputFile  *string `json:"output"`
 	Scan        *bool   `json:"scan"`
+	Masscan     *bool   `json:"masscan"`
 }
 
 // Options for Configuration
 var (
 	C = Options{
 		List:        flag.String("list", "", "/path/to/ip_list"),
-		Cidr:        flag.String("range", "", "specify CIDR range instead of list of individual IPs"),
+		Cidr:        flag.String("cidr", "", "specify CIDR range instead of list of individual IPs"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
 		Pages:       flag.Int("pages", 1, "[SHODAN] # of page results to return"),
 		Passive:     flag.Bool("passive", false, "[SHODAN] return IP passive info or actively check default creds"),
@@ -53,7 +54,8 @@ var (
 		Success:     flag.String("success", "", "string match for successful login"),
 		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
 		OutputFile:  flag.String("output", "", "/path/to/outputfile"),
-		Scan:        flag.Bool("scan", false, "set if you want to show open ports"),
+		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
+		Masscan:     flag.Bool("masscan", false, "use masscan with -scan option. masscan must be installed. requires -cidr [range]"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
 	WebConfig   = flag.String("webconfig", "", "Needs URL to config.json as argument")

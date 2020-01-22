@@ -33,6 +33,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -41,6 +42,7 @@ import (
 
 	"github.com/HDN-1D10T/divinity/src/config"
 	"github.com/HDN-1D10T/divinity/src/masscan"
+	"github.com/HDN-1D10T/divinity/src/portscanner"
 	"github.com/HDN-1D10T/divinity/src/shodan"
 )
 
@@ -84,11 +86,19 @@ func inc(ip net.IP) {
 }
 
 func getIPsFromCIDR(cidr string) ([]string, error) {
+	var ips []string
+	if strings.Contains("/32", cidr) {
+		fmt.Println(cidr)
+		os.Exit(1)
+	}
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	check(err)
-	var ips []string
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
 		ips = append(ips, ip.String())
+	}
+	single := regexp.MustCompile(`/32$`)
+	if single.MatchString(cidr) {
+		return ips, nil
 	}
 	// remove network address and broadcast address
 	return ips[1 : len(ips)-1], nil
@@ -204,15 +214,23 @@ func main() {
 	shodanSearch := *conf.SearchTerm
 	passive := *conf.Passive
 	scan := *conf.Scan
+	masscan := *conf.Masscan
 	cidr := *conf.Cidr
 	ipsOnly := *conf.IPOnly
 	outputFile := *conf.OutputFile
 	if len(cidr) > 0 {
+		//Process IPs from CIDR range
+		ips, _ := getIPsFromCIDR(cidr)
 		if scan {
-			mScan(cidr)
+			if masscan {
+				mScan(cidr)
+				os.Exit(0)
+			} else {
+				for _, host := range ips {
+					portscanner.Scan(host)
+				}
+			}
 		} else {
-			//Process IPs from CIDR range
-			ips, _ := getIPsFromCIDR(cidr)
 			wg.Add(len(ips))
 			for _, host := range ips {
 				go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)

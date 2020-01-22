@@ -24,7 +24,8 @@ func worker(ports, results chan int, host string) {
 	}
 }
 
-func portscanner(host string) {
+// Scan with native portscanner
+func Scan(host string) {
 	ports := make(chan int, 100)
 	results := make(chan int)
 	var openports []int
