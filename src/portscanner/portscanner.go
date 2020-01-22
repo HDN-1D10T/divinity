@@ -11,9 +11,9 @@ import (
 // Configuration imported from src/config
 type Configuration struct{ config.Options }
 
-func worker(ports, results chan int) {
+func worker(ports, results chan int, host string) {
 	for p := range ports {
-		address := fmt.Sprintf("scanme.nmap.org:%d", p)
+		address := fmt.Sprintf("%s:%d", host, p)
 		conn, err := net.Dial("tcp", address)
 		if err != nil {
 			results <- 0
@@ -24,13 +24,13 @@ func worker(ports, results chan int) {
 	}
 }
 
-func portscanner() {
+func portscanner(host string) {
 	ports := make(chan int, 100)
 	results := make(chan int)
 	var openports []int
 
 	for i := 0; i < cap(ports); i++ {
-		go worker(ports, results)
+		go worker(ports, results, host)
 	}
 
 	go func() {
