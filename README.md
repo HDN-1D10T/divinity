@@ -64,7 +64,7 @@ This can be exported on the command line or sourced in your `~/.bashrc`, etc.
 |`-query`   |Shodan search string|
 |`-pages`   |Number `[type: int]` of page results to display. Best practice is to use this flag manually as to not use unnecessary query credits (default: `1`)|
 |`-passive` |If this flag is set, only IPs along with associated countries will be displayed, without testing them for default credentials|
-|`-ips`     |If this flag is set, *ONLY* a list of IPs will be returned in the output that matches the `-query` value (requires `-passive`). This option is good for searching a large number of `-pages` along with the `-output` parameter set, so that you can later run the tool multiple times using the `-list` parameter without an additional increment to your Shodan query credits.
+|`-ips`     |If this flag is set, *ONLY* a list of IPs will be returned in the output that matches the `-query` value (requires `-passive`). This option is good for searching a large number of `-pages` along with the `-out` parameter set, so that you can later run the tool multiple times using the `-list` parameter without an additional increment to your Shodan query credits.
 ---
 ## Example Configurations
 The following configurations can be referenced locally with the `-config` parameter or hosted remotely and referenced with the `-webconfig` parameter.  Command line parameters will override any existing parameters included in the JSON configurations.
@@ -108,14 +108,14 @@ Let's say you wanted to get 500 IP results from Device Manufacturer B, and you h
 
 You could use the following command to save a list of just the IP addresses to subsequently feed back into the application using the `-list` parameter, which would override the call to the Shodan API on the second run:
 
-`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -passive -ips -output manufacturer_b_ips.txt`
+`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -passive -ips -out manufacturer_b_ips.txt`
 
-If you wanted to do everything in one go, just make sure to save your results with the `-output` parameter.  Let's also say that you want to include the text `*** DEFAULT ***` next to the successful attempts.  The output file will include only the IPs with successful default logins.
+If you wanted to do everything in one go, just make sure to save your results with the `-out` parameter.  Let's also say that you want to include the text `*** DEFAULT ***` next to the successful attempts.  The output file will include only the IPs with successful default logins.
 
-`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -alert "*** DEFAULT ***" -output manufacturer_b_default_creds.txt`
+`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -alert "*** DEFAULT ***" -out manufacturer_b_default_creds.txt`
 
 #### Shodan-less Example - Check internal app tier for default credentials:
 Let's say you have a numerous applications running a specific framework for which you have created a configuration file.  These applications are running in your DMZ on the 10.2.2.0/24 network.  As long as you have access to these applications, you can run the following command to test for default credentials:
 
-`divinity -config /path/to/app.json -cidr 10.2.2.0/24 -output dmz_default_creds.txt`
+`divinity -config /path/to/app.json -cidr 10.2.2.0/24 -out dmz_default_creds.txt`
 
