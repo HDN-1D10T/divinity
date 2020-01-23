@@ -44,7 +44,7 @@ import (
 	"github.com/HDN-1D10T/divinity/src/masscan"
 	"github.com/HDN-1D10T/divinity/src/portscanner"
 	"github.com/HDN-1D10T/divinity/src/shodan"
-	"github.com/HDN-1DI0T/divinity/src/tcp"
+	"github.com/HDN-1D10T/divinity/src/tcp"
 )
 
 // Configuration imported from src/config
