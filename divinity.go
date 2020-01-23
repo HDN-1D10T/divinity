@@ -158,14 +158,19 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 		if port == "23" {
 			if len(dumplist) > 0 {
 				hostString := strings.Split(ip, " ")[0]
+				hostString = strings.Replace(hostString, " ", "", -1)
 				credString := strings.Split(ip, " ")[1]
+				credString = strings.Replace(credString, " ", "", -1)
 				ip = strings.Split(hostString, ":")[0]
 				user = strings.Split(credString, ":")[0]
 				pass = strings.Split(credString, ":")[1]
 				tcp.Telnet(ip, user, pass, outputFile)
-			} else {
-				tcp.Telnet(ip, user, pass, outputFile)
+				m.RUnlock()
+				return
 			}
+			tcp.Telnet(ip, user, pass, outputFile)
+			m.RUnlock()
+			return
 		}
 	}
 	// HTTP Request
@@ -277,8 +282,9 @@ func main() {
 				}
 			}
 		} else {
-			wg.Add(len(ips))
+			//wg.Add(len(ips))
 			for _, host := range ips {
+				wg.Add(1)
 				go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
 			}
 			wg.Wait()

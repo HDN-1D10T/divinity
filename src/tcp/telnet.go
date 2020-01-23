@@ -37,7 +37,6 @@ package tcp
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"time"
@@ -69,7 +68,7 @@ func Telnet(ip, user, pass, outputFile string) {
 	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
 	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s", ip), timeout)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	defer e.Close()
 	e.Expect(userRE, timeout)
