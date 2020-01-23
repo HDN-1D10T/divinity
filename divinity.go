@@ -47,6 +47,8 @@ import (
 	"github.com/HDN-1D10T/divinity/src/tcp"
 )
 
+const timeout = 500 * time.Millisecond
+
 // Configuration imported from src/config
 type Configuration struct{ config.Options }
 
@@ -105,6 +107,14 @@ func getIPsFromCIDR(cidr string) ([]string, error) {
 	return ips[1 : len(ips)-1], nil
 }
 
+func getCreds(credentials, user, pass string) string {
+	if len(credentials) > 0 {
+		return credentials
+	}
+	var creds = user + ":" + pass
+	return creds
+}
+
 var m = sync.RWMutex{}
 
 func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
@@ -128,9 +138,9 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	method := *conf.Method
 	basicAuth := *conf.BasicAuth
 	basicAuth = base64.StdEncoding.EncodeToString([]byte(basicAuth))
-	username := *conf.User
-	password := *conf.Password
-	userpass := *conf.UserPass
+	user := *conf.Username
+	pass := *conf.Password
+	credentials := *conf.Credentials
 	contentType := *conf.ContentType
 	headerName := *conf.HeaderName
 	headerValue := *conf.HeaderValue
@@ -139,15 +149,15 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	alert := *conf.Alert
 	outputFile := *conf.OutputFile
 	urlString := protocol + "://" + ip + ":" + port + path
+	creds := getCreds(credentials, user, pass)
+	user = strings.Split(creds, ":")[0]
+	pass = strings.Split(creds, ":")[1]
+	fmt.Println(user)
+	fmt.Println(pass)
 	fmt.Println("Trying " + ip + " ...")
 	if protocol == "tcp" {
-		if len(userpass) > 0 {
-			username := strings.Split(userpass, ":")[0]
-			password := strings.Split(userpass, ":")[1]
-			tcp.Connection(ip, port, username, password)
-
-		} else {
-			tcp.Connection(ip, port, username, password)
+		if port == "23" {
+			tcp.Telnet(ip, user, pass)
 		}
 	}
 	// HTTP Request

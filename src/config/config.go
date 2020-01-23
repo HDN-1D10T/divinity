@@ -31,9 +31,9 @@ type Options struct {
 	OutputFile  *string `json:"output"`
 	Scan        *bool   `json:"scan"`
 	Masscan     *bool   `json:"masscan"`
-	User        *string `json:"user"`
+	Username    *string `json:"user"`
 	Password    *string `json:"pass"`
-	UserPass    *string `json:"user-pass"`
+	Credentials *string `json:"creds"`
 }
 
 // Options for Configuration
@@ -59,9 +59,9 @@ var (
 		OutputFile:  flag.String("output", "", "/path/to/outputfile"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
 		Masscan:     flag.Bool("masscan", false, "use masscan with -scan option. masscan must be installed. requires -cidr [range]"),
-		User:        flag.String("user", "", "username for tcp connections"),
+		Username:    flag.String("user", "", "username for tcp connections"),
 		Password:    flag.String("pass", "", "password for tcp connections"),
-		UserPass:    flag.String("user-pass", "", "'username:password' formatted string for tcp connections"),
+		Credentials: flag.String("creds", "", "'username:password' formatted string for tcp connections"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
 	WebConfig   = flag.String("webconfig", "", "Needs URL to config.json as argument")
