@@ -38,6 +38,7 @@ package tcp
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"time"
 
@@ -46,8 +47,23 @@ import (
 
 const timeout = 500 * time.Millisecond
 
+func filewrite(chunk, outputFile string) {
+	f, err := os.OpenFile(outputFile,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if _, err := f.WriteString(chunk + "\n"); err != nil {
+		panic(err)
+	}
+	if err := f.Sync(); err != nil {
+		panic(err)
+	}
+}
+
 // Telnet - check for valid credentials
-func Telnet(ip, user, pass string) {
+func Telnet(ip, user, pass, outputFile string) {
 	userRE := regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE := regexp.MustCompile(".*[Pp]assword.*")
 	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
@@ -63,8 +79,9 @@ func Telnet(ip, user, pass string) {
 	res, _, err := e.Expect(promptRE, timeout)
 	e.Send("exit\n")
 	if promptRE.MatchString(res) {
-		fmt.Println("good login")
-	} else {
-		fmt.Println("bad login")
+		fmt.Printf("%s:23 %s:%s\n", ip, user, pass)
+		if len(outputFile) > 0 {
+			filewrite(ip+":23 "+user+":"+pass, outputFile)
+		}
 	}
 }

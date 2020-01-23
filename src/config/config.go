@@ -28,12 +28,13 @@ type Options struct {
 	Data        *string `json:"data"`
 	Success     *string `json:"success"`
 	Alert       *string `json:"alert"`
-	OutputFile  *string `json:"output"`
+	OutputFile  *string `json:"out"`
 	Scan        *bool   `json:"scan"`
 	Masscan     *bool   `json:"masscan"`
 	Username    *string `json:"user"`
 	Password    *string `json:"pass"`
 	Credentials *string `json:"creds"`
+	DumpList    *string `json:"dumplist"`
 }
 
 // Options for Configuration
@@ -56,12 +57,13 @@ var (
 		Data:        flag.String("data", "", "POST form data"),
 		Success:     flag.String("success", "", "string match for successful login"),
 		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
-		OutputFile:  flag.String("output", "", "/path/to/outputfile"),
+		OutputFile:  flag.String("out", "", "/path/to/outputfile"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
 		Masscan:     flag.Bool("masscan", false, "use masscan with -scan option. masscan must be installed. requires -cidr [range]"),
 		Username:    flag.String("user", "", "username for tcp connections"),
 		Password:    flag.String("pass", "", "password for tcp connections"),
 		Credentials: flag.String("creds", "", "'username:password' formatted string for tcp connections"),
+		DumpList:    flag.String("dumplist", "", "path to file with format '[ip]:[port] [user]:[pass]'"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
 	WebConfig   = flag.String("webconfig", "", "Needs URL to config.json as argument")

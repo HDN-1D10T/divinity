@@ -149,15 +149,23 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	alert := *conf.Alert
 	outputFile := *conf.OutputFile
 	urlString := protocol + "://" + ip + ":" + port + path
+	dumplist := *conf.DumpList
 	creds := getCreds(credentials, user, pass)
 	user = strings.Split(creds, ":")[0]
 	pass = strings.Split(creds, ":")[1]
-	fmt.Println(user)
-	fmt.Println(pass)
 	fmt.Println("Trying " + ip + " ...")
 	if protocol == "tcp" {
 		if port == "23" {
-			tcp.Telnet(ip, user, pass)
+			if len(dumplist) > 0 {
+				hostString := strings.Split(ip, " ")[0]
+				credString := strings.Split(ip, " ")[1]
+				ip = strings.Split(hostString, ":")[0]
+				user = strings.Split(credString, ":")[0]
+				pass = strings.Split(credString, ":")[1]
+				tcp.Telnet(ip, user, pass, outputFile)
+			} else {
+				tcp.Telnet(ip, user, pass, outputFile)
+			}
 		}
 	}
 	// HTTP Request
@@ -235,6 +243,7 @@ func main() {
 		config.ParseConfiguration(),
 	}
 	list := *conf.List
+	dumplist := *conf.DumpList
 	shodanSearch := *conf.SearchTerm
 	passive := *conf.Passive
 	scan := *conf.Scan
@@ -288,6 +297,23 @@ func main() {
 		}
 		wg.Wait()
 	} else if len(list) > 1 {
+		// Process list from file
+		file, err := os.Open(list)
+		check(err)
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+		var ips []string
+		for scanner.Scan() {
+			ips = append(ips, scanner.Text())
+		}
+		file.Close()
+		wg.Add(len(ips))
+		for _, host := range ips {
+			go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
+		}
+		wg.Wait()
+	} else if len(dumplist) > 1 {
+		list = dumplist
 		// Process list from file
 		file, err := os.Open(list)
 		check(err)
