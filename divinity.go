@@ -119,6 +119,7 @@ var m = sync.RWMutex{}
 
 func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	m.RLock()
+	defer m.RUnlock()
 	defer wg.Done()
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -165,11 +166,9 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 				user = strings.Split(credString, ":")[0]
 				pass = strings.Split(credString, ":")[1]
 				tcp.Telnet(ip, user, pass, outputFile)
-				m.RUnlock()
 				return
 			}
 			tcp.Telnet(ip, user, pass, outputFile)
-			m.RUnlock()
 			return
 		}
 	}
@@ -217,7 +216,6 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 			filewrite(msg, outputFile)
 		}
 	}
-	m.RUnlock()
 }
 
 func mScan(cidr string) {
