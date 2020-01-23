@@ -44,6 +44,7 @@ import (
 	"github.com/HDN-1D10T/divinity/src/masscan"
 	"github.com/HDN-1D10T/divinity/src/portscanner"
 	"github.com/HDN-1D10T/divinity/src/shodan"
+	"github.com/HDN-1DI0T/divinity/src/tcp"
 )
 
 // Configuration imported from src/config
@@ -127,6 +128,9 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	method := *conf.Method
 	basicAuth := *conf.BasicAuth
 	basicAuth = base64.StdEncoding.EncodeToString([]byte(basicAuth))
+	username := *conf.User
+	password := *conf.Password
+	userpass := *conf.UserPass
 	contentType := *conf.ContentType
 	headerName := *conf.HeaderName
 	headerValue := *conf.HeaderValue
@@ -136,6 +140,16 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	outputFile := *conf.OutputFile
 	urlString := protocol + "://" + ip + ":" + port + path
 	fmt.Println("Trying " + ip + " ...")
+	if protocol == "tcp" {
+		if len(userpass) > 0 {
+			username := strings.Split(userpass, ":")[0]
+			password := strings.Split(userpass, ":")[1]
+			tcp.Connection(ip, port, username, password)
+
+		} else {
+			tcp.Connection(ip, port, username, password)
+		}
+	}
 	// HTTP Request
 	req, err := http.NewRequest(method, urlString, strings.NewReader(data))
 	check(err)
