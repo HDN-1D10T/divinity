@@ -36,13 +36,17 @@ Enjoy and contribute!
 |`-config`|path to a JSON config file   |
 |`-webconfig`|URL to a JSON config file    |
 |`-list`|path to list of IPs (value `-` or `stdin` allows processing from `stdin` instead of file)|
+|`-dumplist`|path to file with format `[ip]:[port] [user]:[pass]`|
 |`-cidr`|specify a CIDR range of IP addresses to run login tests or scan against|
-|`-output`|specify file name or file path to save results 
-|`-protocol`|specify if login target uses `HTTP` or `HTTPS` (`TCP` option coming soon)|
+|`-out`|specify file name or file path to save results 
+|`-protocol`|specify if login target uses `HTTP`, `HTTPS`, or generic `TCP`|
 |`-port`|specify port used by login target|
 |`-path`|specify URL path to login page (default: `"/"`)|
 |`-method`|specify HTTP method (usually `GET` or `POST`)|
 |`-basic-auth`|if basic auth is needed, value should be plain-text `username:password` format|
+|`-creds`|same as `-basic-auth`, except for TCP|
+|`-user`|TCP username|
+|`-pass`|TCP password|
 |`-content`|value of `Content-Type` header when used with `-method POST`|
 |`-data`|payload body when used with `-method POST`|
 |`-headername`|specify an additional HTTP request header name|
