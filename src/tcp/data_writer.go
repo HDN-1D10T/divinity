@@ -8,11 +8,11 @@
 package tcp
 
 import (
-	"github.com/reiver/go-oi"
-
 	"bytes"
 	"errors"
 	"io"
+
+	"github.com/reiver/go-oi"
 )
 
 var iaciac []byte = []byte{255, 255}

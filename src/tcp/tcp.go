@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//
+// Conn Struct
 type Conn struct {
 	conn interface {
 		Read(b []byte) (n int, err error)
@@ -22,7 +22,7 @@ type Conn struct {
 // Connection to TCP address:port
 func Connection(ip, port, user, pass string) (*Conn, error) {
 	//fmt.Printf("Trying %s:%d...\n", host, p)
-	address := fmt.Sprintf("%s:%d", ip, port)
+	address := fmt.Sprintf("%s:%s", ip, port)
 	conn, err := net.DialTimeout("tcp", address, 500*time.Millisecond)
 	if nil != err {
 		return nil, err
