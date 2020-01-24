@@ -37,38 +37,30 @@ package tcp
 
 import (
 	"fmt"
-	"os"
 	"regexp"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/HDN-1D10T/divinity/src/util"
 	expect "github.com/google/goexpect"
 )
 
-const timeout = 10 * time.Second
+const timeout = 500 * time.Millisecond
 
-func filewrite(chunk, outputFile string) {
-	f, err := os.OpenFile(outputFile,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	if _, err := f.WriteString(chunk + "\n"); err != nil {
-		return
-	}
-	if err := f.Sync(); err != nil {
-		return
-	}
-}
+var m = sync.RWMutex{}
 
-// Telnet - check for valid credentials
-func Telnet(ip, user, pass, outputFile string) {
+func doTelnet(ip, user, pass, outputFile string, wg *sync.WaitGroup) {
+	m.Lock()
+	defer m.Unlock()
+	fmt.Println("Trying " + ip + ":23 " + user + ":" + pass + "...")
 	userRE := regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE := regexp.MustCompile(".*[Pp]assword.*")
 	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
 	stuffRE := regexp.MustCompile(`.*[A-Za-z0-9].*`)
 	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s", ip), timeout)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	defer e.Close()
@@ -83,9 +75,37 @@ func Telnet(ip, user, pass, outputFile string) {
 	res, _, err := e.Expect(promptRE, timeout)
 	e.Send("exit\n")
 	if promptRE.MatchString(res) {
-		fmt.Printf("%s:23 %s:%s\n", ip, user, pass)
+		fmt.Printf("%s:23 %s:%s\t*** GOOD ***\n", ip, user, pass)
 		if len(outputFile) > 0 {
-			filewrite(ip+":23 "+user+":"+pass, outputFile)
+			util.FileWrite(ip+":23 "+user+":"+pass+"\t*** GOOD ***", outputFile)
+		}
+	}
+}
+
+// Telnet - check for valid credentials
+func Telnet(ips []string, conf *Configuration) {
+	var wg = sync.WaitGroup{}
+	outputFile := *conf.OutputFile
+	wg.Add(len(ips))
+	defer wg.Wait()
+	for _, ip := range ips {
+		dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
+		if !dumpmatch.MatchString(ip) {
+			//wg.Done()
+			return
+		}
+		hostString := strings.Split(ip, " ")[0]
+		credString := strings.Split(ip, " ")[1]
+		ip = strings.Split(hostString, ":")[0]
+		creds := strings.Split(credString, ":")
+		if len(creds) == 2 {
+			user := creds[0]
+			pass := creds[1]
+			go doTelnet(ip, user, pass, outputFile, &wg)
+		} else {
+			user := creds[0]
+			pass := ""
+			go doTelnet(ip, user, pass, outputFile, &wg)
 		}
 	}
 }

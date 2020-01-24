@@ -30,6 +30,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -70,10 +71,10 @@ func filewrite(chunk, outputFile string) {
 	check(err)
 	defer f.Close()
 	if _, err := f.WriteString(chunk + "\n"); err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
 	if err := f.Sync(); err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
 }
 
@@ -148,38 +149,10 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	alert := *conf.Alert
 	outputFile := *conf.OutputFile
 	urlString := protocol + "://" + ip + ":" + port + path
-	dumplist := *conf.DumpList
 	creds := getCreds(credentials, user, pass)
 	user = strings.Split(creds, ":")[0]
 	pass = strings.Split(creds, ":")[1]
 	fmt.Println("Trying " + ip + " ...")
-	if protocol == "tcp" {
-		if port == "23" {
-			if len(dumplist) > 0 {
-				dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
-				if !dumpmatch.MatchString(ip) {
-					return
-				}
-				hostString := strings.Split(ip, " ")[0]
-				credString := strings.Split(ip, " ")[1]
-				ip = strings.Split(hostString, ":")[0]
-				creds := strings.Split(credString, ":")
-				if len(creds) == 2 {
-					user = creds[0]
-					pass = creds[1]
-					tcp.Telnet(ip, user, pass, outputFile)
-					time.Sleep(100 * time.Millisecond)
-					return
-				}
-				user = creds[0]
-				pass = ""
-				tcp.Telnet(ip, user, pass, outputFile)
-				return
-			}
-			tcp.Telnet(ip, user, pass, outputFile)
-			return
-		}
-	}
 	// HTTP Request
 	req, err := http.NewRequest(method, urlString, strings.NewReader(data))
 	check(err)
@@ -335,11 +308,7 @@ func main() {
 			ips = append(ips, scanner.Text())
 		}
 		file.Close()
-		wg.Add(len(ips))
-		for _, host := range ips {
-			go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
-		}
-		wg.Wait()
+		tcp.Handler(ips)
 	} else if passive {
 		// Process list from Shodan
 		apiKey := os.Getenv("SHODAN_API_KEY")
