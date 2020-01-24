@@ -44,20 +44,20 @@ import (
 	expect "github.com/google/goexpect"
 )
 
-const timeout = 500 * time.Millisecond
+const timeout = 10 * time.Second
 
 func filewrite(chunk, outputFile string) {
 	f, err := os.OpenFile(outputFile,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		return
 	}
 	defer f.Close()
 	if _, err := f.WriteString(chunk + "\n"); err != nil {
-		panic(err)
+		return
 	}
 	if err := f.Sync(); err != nil {
-		panic(err)
+		return
 	}
 }
 
@@ -66,6 +66,7 @@ func Telnet(ip, user, pass, outputFile string) {
 	userRE := regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE := regexp.MustCompile(".*[Pp]assword.*")
 	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
+	stuffRE := regexp.MustCompile(`.*[A-Za-z0-9].*`)
 	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s", ip), timeout)
 	if err != nil {
 		return
@@ -74,7 +75,11 @@ func Telnet(ip, user, pass, outputFile string) {
 	e.Expect(userRE, timeout)
 	e.Send(user + "\n")
 	e.Expect(passRE, timeout)
-	e.Send(pass + "\n")
+	if stuffRE.MatchString(pass) {
+		e.Send(pass + "\n")
+	} else {
+		e.Send("\n")
+	}
 	res, _, err := e.Expect(promptRE, timeout)
 	e.Send("exit\n")
 	if promptRE.MatchString(res) {

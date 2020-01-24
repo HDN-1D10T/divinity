@@ -47,8 +47,6 @@ import (
 	"github.com/HDN-1D10T/divinity/src/tcp"
 )
 
-const timeout = 500 * time.Millisecond
-
 // Configuration imported from src/config
 type Configuration struct{ config.Options }
 
@@ -158,13 +156,23 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	if protocol == "tcp" {
 		if port == "23" {
 			if len(dumplist) > 0 {
+				dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
+				if !dumpmatch.MatchString(ip) {
+					return
+				}
 				hostString := strings.Split(ip, " ")[0]
-				hostString = strings.Replace(hostString, " ", "", -1)
 				credString := strings.Split(ip, " ")[1]
-				credString = strings.Replace(credString, " ", "", -1)
 				ip = strings.Split(hostString, ":")[0]
-				user = strings.Split(credString, ":")[0]
-				pass = strings.Split(credString, ":")[1]
+				creds := strings.Split(credString, ":")
+				if len(creds) == 2 {
+					user = creds[0]
+					pass = creds[1]
+					tcp.Telnet(ip, user, pass, outputFile)
+					time.Sleep(100 * time.Millisecond)
+					return
+				}
+				user = creds[0]
+				pass = ""
 				tcp.Telnet(ip, user, pass, outputFile)
 				return
 			}
@@ -240,7 +248,7 @@ func mScan(cidr string) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(100)
+	runtime.GOMAXPROCS(24)
 	var wg = sync.WaitGroup{}
 	conf := Configuration{
 		config.ParseConfiguration(),
@@ -280,9 +288,8 @@ func main() {
 				}
 			}
 		} else {
-			//wg.Add(len(ips))
+			wg.Add(len(ips))
 			for _, host := range ips {
-				wg.Add(1)
 				go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
 			}
 			wg.Wait()
