@@ -90,6 +90,7 @@ func Telnet(ips []string, conf *Configuration) {
 			dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
 			if !dumpmatch.MatchString(ip) {
 				fmt.Println("Error: string formatted incorrectly" + ip)
+				return
 			}
 			hostString := strings.Split(ip, " ")[0]
 			credString := strings.Split(ip, " ")[1]
