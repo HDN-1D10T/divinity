@@ -106,6 +106,6 @@ func Telnet(ips []string, conf *Configuration) {
 				doTelnet(ip, user, pass, alert, outputFile)
 			}
 		}(ip)
-		time.Sleep(1 * time.Second)
+		time.Sleep(20 * time.Millisecond)
 	}
 }
