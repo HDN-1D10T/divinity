@@ -31,13 +31,19 @@ func LogWrite(msg, outputFile string) {
 	f, err := os.OpenFile(outputFile,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		fmt.Println(err)
+		f.Close()
 		return
 	}
-	defer f.Close()
 	if _, err := f.WriteString(msg + "\n"); err != nil {
+		fmt.Println(err)
+		f.Close()
 		return
 	}
 	if err := f.Sync(); err != nil {
+		fmt.Println(err)
+		f.Close()
 		return
 	}
+	f.Close()
 }

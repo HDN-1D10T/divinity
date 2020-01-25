@@ -56,9 +56,9 @@ func doTelnet(ip, user, pass, alert, outputFile string) {
 	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s", ip), timeout)
 	if err != nil {
 		fmt.Println(err)
+		e.Close()
 		return
 	}
-	defer e.Close()
 	e.Expect(userRE, timeout)
 	e.Send(user + "\n")
 	e.Expect(passRE, timeout)
@@ -69,6 +69,7 @@ func doTelnet(ip, user, pass, alert, outputFile string) {
 	}
 	res, _, err := e.Expect(promptRE, timeout)
 	if err != nil {
+		e.Close()
 		return
 	}
 	e.Send("exit\n")
@@ -79,6 +80,7 @@ func doTelnet(ip, user, pass, alert, outputFile string) {
 			util.FileWrite(msg, outputFile)
 		}
 	}
+	e.Close()
 }
 
 // Telnet - check for valid credentials
