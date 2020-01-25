@@ -12,15 +12,15 @@ func FileWrite(msg, outputFile string) {
 	f, err := os.OpenFile(outputFile,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return
+		fmt.Println(err)
 	}
-	defer f.Close()
 	if _, err := f.WriteString(msg + "\n"); err != nil {
-		return
+		fmt.Println(err)
 	}
 	if err := f.Sync(); err != nil {
-		return
+		fmt.Println(err)
 	}
+	f.Close()
 }
 
 // LogWrite Helper Utility:
