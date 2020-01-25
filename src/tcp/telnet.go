@@ -45,7 +45,7 @@ import (
 	expect "github.com/google/goexpect"
 )
 
-const timeout = 500 * time.Millisecond
+const timeout = 1 * time.Second
 
 func doTelnet(ip, user, pass, alert, outputFile string) {
 	fmt.Printf("Trying %s:23 %s:%s...\n", ip, user, pass)
@@ -89,7 +89,7 @@ func Telnet(ips []string, conf *Configuration) {
 		go func(ip string) {
 			dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
 			if !dumpmatch.MatchString(ip) {
-				fmt.Println("Error: string formatted incorrectly" + ip)
+				// fmt.Println("Error: string formatted incorrectly" + ip)
 				return
 			}
 			hostString := strings.Split(ip, " ")[0]
