@@ -54,9 +54,6 @@ func doTelnet(ip, user, pass, alert, outputFile string) {
 	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
 	stuffRE := regexp.MustCompile(`.*[A-Za-z0-9].*`)
 	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s", ip), timeout)
-	if err != nil {
-		return
-	}
 	e.Expect(userRE, timeout)
 	e.Send(user + "\n")
 	e.Expect(passRE, timeout)
