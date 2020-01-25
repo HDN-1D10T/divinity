@@ -1,3 +1,5 @@
+package tcp
+
 /*
 The included "github.com/google/goexpect" package is used under
 the BSD-3-Clause listed below.  All other code falls under the
@@ -33,13 +35,10 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package tcp
-
 import (
 	"fmt"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/HDN-1D10T/divinity/src/util"
@@ -48,12 +47,8 @@ import (
 
 const timeout = 500 * time.Millisecond
 
-var m = sync.RWMutex{}
-
-func doTelnet(ip, user, pass, outputFile string, wg *sync.WaitGroup) {
-	m.Lock()
-	defer m.Unlock()
-	fmt.Println("Trying " + ip + ":23 " + user + ":" + pass + "...")
+func doTelnet(ip, user, pass, alert, outputFile string) {
+	fmt.Printf("Trying %s:23 %s:%s...\n", ip, user, pass)
 	userRE := regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE := regexp.MustCompile(".*[Pp]assword.*")
 	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
@@ -73,39 +68,43 @@ func doTelnet(ip, user, pass, outputFile string, wg *sync.WaitGroup) {
 		e.Send("\n")
 	}
 	res, _, err := e.Expect(promptRE, timeout)
+	if err != nil {
+		return
+	}
 	e.Send("exit\n")
 	if promptRE.MatchString(res) {
-		fmt.Printf("%s:23 %s:%s\t*** GOOD ***\n", ip, user, pass)
+		msg := fmt.Sprintf("%s:23 %s:%s\t%s\n", ip, user, pass, alert)
+		fmt.Println(msg)
 		if len(outputFile) > 0 {
-			util.FileWrite(ip+":23 "+user+":"+pass+"\t*** GOOD ***", outputFile)
+			util.FileWrite(msg, outputFile)
 		}
 	}
 }
 
 // Telnet - check for valid credentials
 func Telnet(ips []string, conf *Configuration) {
-	var wg = sync.WaitGroup{}
+	alert := *conf.Alert
 	outputFile := *conf.OutputFile
-	wg.Add(len(ips))
-	defer wg.Wait()
 	for _, ip := range ips {
-		dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
-		if !dumpmatch.MatchString(ip) {
-			//wg.Done()
-			return
-		}
-		hostString := strings.Split(ip, " ")[0]
-		credString := strings.Split(ip, " ")[1]
-		ip = strings.Split(hostString, ":")[0]
-		creds := strings.Split(credString, ":")
-		if len(creds) == 2 {
-			user := creds[0]
-			pass := creds[1]
-			go doTelnet(ip, user, pass, outputFile, &wg)
-		} else {
-			user := creds[0]
-			pass := ""
-			go doTelnet(ip, user, pass, outputFile, &wg)
-		}
+		go func(ip string) {
+			dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*[A-Za-z0-9].*:.*`)
+			if !dumpmatch.MatchString(ip) {
+				fmt.Println("Error: string formatted incorrectly" + ip)
+			}
+			hostString := strings.Split(ip, " ")[0]
+			credString := strings.Split(ip, " ")[1]
+			ip = strings.Split(hostString, ":")[0]
+			creds := strings.Split(credString, ":")
+			if len(creds) == 2 {
+				user := creds[0]
+				pass := creds[1]
+				doTelnet(ip, user, pass, alert, outputFile)
+			} else {
+				user := creds[0]
+				pass := ""
+				doTelnet(ip, user, pass, alert, outputFile)
+			}
+		}(ip)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
