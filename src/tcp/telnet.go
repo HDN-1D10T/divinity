@@ -45,7 +45,7 @@ import (
 	expect "github.com/google/goexpect"
 )
 
-const timeout = 10 * time.Second
+const timeout = 60 * time.Second
 
 func doTelnet(ip, user, pass, alert, outputFile string) {
 	fmt.Printf("Trying %s:23 %s:%s...\n", ip, user, pass)
@@ -106,6 +106,6 @@ func Telnet(ips []string, conf *Configuration) {
 				doTelnet(ip, user, pass, alert, outputFile)
 			}
 		}(ip)
-		time.Sleep(2 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 	}
 }
