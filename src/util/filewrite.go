@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -12,13 +13,18 @@ func FileWrite(msg, outputFile string) {
 	f, err := os.OpenFile(outputFile,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		return
 	}
-	if _, err := f.WriteString(msg + "\n"); err != nil {
-		fmt.Println(err)
+	if _, err := f.WriteString(msg); err != nil {
+		log.Println(err)
+		f.Close()
+		return
 	}
 	if err := f.Sync(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		f.Close()
+		return
 	}
 	f.Close()
 }
@@ -31,17 +37,16 @@ func LogWrite(msg, outputFile string) {
 	f, err := os.OpenFile(outputFile,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println(err)
-		f.Close()
+		log.Println(err)
 		return
 	}
 	if _, err := f.WriteString(msg + "\n"); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		f.Close()
 		return
 	}
 	if err := f.Sync(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		f.Close()
 		return
 	}
