@@ -138,3 +138,8 @@ Let's say you wanted to find a list of IPs on a local network that were running 
 #### Feed your list back in to check for default creds:
 
 `divinity -list telnet.txt -protocol tcp -port 23 -out default_creds.txt`
+
+#### If you want, just feed the `stdout` to `stdin`
+
+`divinity -scan -cidr 192.168.1.0/24 -port 23 | divinity -protocol tcp -port 23 -creds admin:admin -list - -out default_creds.txt`
+
