@@ -108,7 +108,8 @@ func doIPList(lines []string) {
 					port := connectionString[1]
 					return ip, port
 				}
-				return "", ""
+				ip := connectionString[0]
+				return ip, ""
 			}(connectionString)
 			ip := strings.Replace(hostString, " ", "", -1)
 			port := strings.Replace(portString, " ", "", -1)
