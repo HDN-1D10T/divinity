@@ -10,7 +10,7 @@ import (
 	"github.com/HDN-1D10T/divinity/src/util"
 )
 
-const timeout = 500 * time.Millisecond
+const timeout = 2 * time.Second
 
 var (
 	nouserRE = regexp.MustCompile(`^:.+`)
