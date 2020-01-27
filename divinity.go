@@ -275,6 +275,10 @@ func main() {
 		for scanner.Scan() {
 			ips = append(ips, scanner.Text())
 		}
+		if *conf.Protocol == "tcp" {
+			tcp.Handler(ips)
+			return
+		}
 		wg.Add(len(ips))
 		for _, host := range ips {
 			go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)

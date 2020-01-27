@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/HDN-1D10T/divinity/src/util"
+
 	"github.com/HDN-1D10T/divinity/src/config"
 )
 
@@ -29,6 +31,9 @@ func worker(ports, results chan int, host string) {
 
 // Scan with native portscanner
 func Scan(host string, portString string) {
+	conf := Configuration{
+		config.ParseConfiguration(),
+	}
 	ports := make(chan int, 100)
 	results := make(chan int)
 
@@ -56,7 +61,11 @@ func Scan(host string, portString string) {
 		sort.Ints(openports)
 		for _, port := range openports {
 			host := host
-			fmt.Printf("%s:%d\n", host, port)
+			msg := fmt.Sprintf("%s:%d\n", host, port)
+			fmt.Printf(msg)
+			if len(*conf.OutputFile) > 0 {
+				util.FileWrite(msg, *conf.OutputFile)
+			}
 		}
 	} else {
 		thePort, _ := strconv.Atoi(portString)
@@ -70,7 +79,11 @@ func Scan(host string, portString string) {
 		sort.Ints(openports)
 		for range openports {
 			host := host
-			fmt.Printf("%s\n", host)
+			msg := fmt.Sprintf("%s\n", host)
+			fmt.Printf(msg)
+			if len(*conf.OutputFile) > 0 {
+				util.FileWrite(msg, *conf.OutputFile)
+			}
 		}
 	}
 }
