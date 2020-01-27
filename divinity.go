@@ -152,7 +152,7 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	creds := getCreds(credentials, user, pass)
 	user = strings.Split(creds, ":")[0]
 	pass = strings.Split(creds, ":")[1]
-	fmt.Println("Trying " + ip + " ...")
+	log.Println("Trying " + ip + " ...")
 	// HTTP Request
 	req, err := http.NewRequest(method, urlString, strings.NewReader(data))
 	check(err)
@@ -284,11 +284,17 @@ func main() {
 		// Process list from file
 		file, err := os.Open(list)
 		check(err)
+		defer file.Close()
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
 		var ips []string
 		for scanner.Scan() {
 			ips = append(ips, scanner.Text())
+		}
+		if *conf.Protocol == "tcp" {
+			tcp.Handler(ips)
+			file.Close()
+			return
 		}
 		file.Close()
 		wg.Add(len(ips))

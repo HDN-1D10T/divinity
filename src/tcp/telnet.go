@@ -12,48 +12,37 @@ import (
 
 const timeout = 500 * time.Millisecond
 
-// Telnet - Check for valid credentials
-func Telnet(ips []string, conf *Configuration) {
-	alert := *conf.Alert
-	outputFile := *conf.OutputFile
-	nouserRE := regexp.MustCompile(`^:.+`)
-	nopassRE := regexp.MustCompile(`.+:$`)
-	for _, ip := range ips {
-		go func(ip string) {
-			dumpmatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5} .*:.*`)
-			if !dumpmatch.MatchString(ip) {
-				log.Println("string formatted incorrectly" + ip)
-				return
-			}
-			hostString := strings.Split(ip, " ")[0]
-			credString := strings.Split(ip, " ")[1]
-			ip = strings.Split(hostString, ":")[0]
-			creds := strings.Split(credString, ":")
-			if len(creds) == 2 {
-				user := creds[0]
-				pass := creds[1]
-				doTelnet(ip, user, pass, alert, outputFile)
-			} else if nouserRE.MatchString(credString) {
-				user := ""
-				pass := creds[0]
-				doTelnet(ip, user, pass, alert, outputFile)
-			} else if nopassRE.MatchString(credString) {
-				user := creds[0]
-				pass := ""
-				doTelnet(ip, user, pass, alert, outputFile)
-			}
-		}(ip)
-		time.Sleep(20 * time.Millisecond)
+var (
+	nouserRE = regexp.MustCompile(`^:.+`)
+	nopassRE = regexp.MustCompile(`.+:$`)
+	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
+	passRE   = regexp.MustCompile(".*[Pp]assword.*")
+	promptRE = regexp.MustCompile(`.*[#\$>].*`)
+	badRE    = regexp.MustCompile(`.*[Ii]ncorrect.*`)
+)
+
+// TelnetPreflight - checks if we want to use the telnet protocol and on which port
+func TelnetPreflight(hostString, ip, port, user, pass, Alert, OutputFile string) {
+	if Port == "23" {
+		Telnet(ip, Port, user, pass, Alert, OutputFile)
+		return
+	}
+	if len(strings.Split(hostString, ":")) > 1 {
+		port = strings.Split(hostString, ":")[1]
+		port = strings.Replace(hostString, " ", "", -1)
+		Telnet(ip, port, user, pass, Alert, OutputFile)
+		return
+	}
+	if *Conf.Telnet {
+		Telnet(ip, port, user, pass, Alert, OutputFile)
+		return
 	}
 }
 
-func doTelnet(ip, user, pass, alert, outputFile string) {
-	//log.Printf("Trying %s:23 %s:%s...\n", ip, user, pass)
-	userRE := regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
-	passRE := regexp.MustCompile(".*[Pp]assword.*")
-	promptRE := regexp.MustCompile(`.*[#\$%>].*`)
-	badRE := regexp.MustCompile(`.*[Ii]ncorrect.*`)
-	conn, err := DialTimeout("tcp", ip+":23", timeout)
+// Telnet - Check for valid credentials
+func Telnet(ip, port, user, pass, alert, outputFile string) {
+	log.Printf("Trying %s:23 %s:%s...\n", ip, user, pass)
+	conn, err := DialTimeout("tcp", ip+":"+port, timeout)
 	if err != nil {
 		//log.Println(err)
 		return

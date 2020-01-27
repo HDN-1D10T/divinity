@@ -103,8 +103,8 @@ The following configurations can be referenced locally with the `-config` parame
     "success": "<authResult>0</authResult>"
 }
 ```
-#### Example - Check 500 results from Device Manufacturer B for default credentials:
-Let's say you wanted to get 500 IP results from Device Manufacturer B, and you have the config stored in a directory on the web along with additional configs you have created for finding different devices.  You want to store these IPs for later use without increasing your Shodan API query credits.
+#### Example - Check 500 individual  results from Device Manufacturer B for default credentials:
+Let's say you wanted to get 500 individual IP results from Device Manufacturer B, and you have the config stored in a directory on the web along with additional configs you have created for finding different devices.  You want to store these IPs for later use without increasing your Shodan API query credits.
 
 You could use the following command to save a list of just the IP addresses to subsequently feed back into the application using the `-list` parameter, which would override the call to the Shodan API on the second run:
 
@@ -119,3 +119,22 @@ Let's say you have a numerous applications running a specific framework for whic
 
 `divinity -config /path/to/app.json -cidr 10.2.2.0/24 -out dmz_default_creds.txt`
 
+## Portscanning
+**Note:** `masscan` integration is not complete and is a work in progress.  There are also plans to implement `nmap` integration.  Both of these require spawning OS processes that require these utilities to be installed,
+and additionally require `sudo` or root-level permission.
+
+That being said, there is a native golang portscanner implemented directly in this project, and it works quite well.  Additionally, it doesn't require root-level permissions to do its thing, *and it does its thing very efficiently*.
+
+When scanning for a single port, `divinity` can knock out a /24 in around 2 minutes.  That's over the Internet.  But of course, you would only use this tool on local networks...
+
+### Scan Example
+
+Let's say you wanted to find a list of IPs on a local network that were running Telnet servers.  You want to create a list of these IPs to feed back into `divinity` and test for default credentials `admin:admin`.
+
+#### Create your list:
+
+`divinity -scan -cidr 192.168.1.0/24 -port 23 -out telnet.txt`
+
+#### Feed your list back in to check for default creds:
+
+`divinity -list telnet.txt -protocol tcp -port 23 -out default_creds.txt`

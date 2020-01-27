@@ -11,59 +11,61 @@ import (
 
 // Options struct for Configuration
 type Options struct {
-	List        *string `json:"list"`
-	Cidr        *string `json:"cidr"`
-	SearchTerm  *string `json:"query"`
-	Pages       *int    `json:"pages"`
-	Passive     *bool   `json:"passive"`
-	IPOnly      *bool   `json:"ips"`
-	Protocol    *string `json:"protocol"`
-	Port        *string `json:"port"`
-	Path        *string `json:"path"`
-	Method      *string `json:"method"`
+	Alert       *string `json:"alert"`
 	BasicAuth   *string `json:"basic-auth"`
+	Cidr        *string `json:"cidr"`
 	ContentType *string `json:"content"`
+	Credentials *string `json:"creds"`
+	Data        *string `json:"data"`
+	DumpList    *string `json:"dumplist"`
+	List        *string `json:"list"`
 	HeaderName  *string `json:"headername"`
 	HeaderValue *string `json:"headervalue"`
-	Data        *string `json:"data"`
-	Success     *string `json:"success"`
-	Alert       *string `json:"alert"`
-	OutputFile  *string `json:"out"`
-	Scan        *bool   `json:"scan"`
+	IPOnly      *bool   `json:"ips"`
 	Masscan     *bool   `json:"masscan"`
-	Username    *string `json:"user"`
+	Method      *string `json:"method"`
+	OutputFile  *string `json:"out"`
+	Path        *string `json:"path"`
+	Pages       *int    `json:"pages"`
+	Passive     *bool   `json:"passive"`
 	Password    *string `json:"pass"`
-	Credentials *string `json:"creds"`
-	DumpList    *string `json:"dumplist"`
+	Port        *string `json:"port"`
+	Protocol    *string `json:"protocol"`
+	SearchTerm  *string `json:"query"`
+	Scan        *bool   `json:"scan"`
+	Success     *string `json:"success"`
+	Telnet      *bool   `json:"telnet"`
+	Username    *string `json:"user"`
 }
 
 // Options for Configuration
 var (
 	C = Options{
-		List:        flag.String("list", "", "/path/to/ip_list"),
-		Cidr:        flag.String("cidr", "", "specify CIDR range instead of list of individual IPs"),
-		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
-		Pages:       flag.Int("pages", 1, "[SHODAN] # of page results to return"),
-		Passive:     flag.Bool("passive", false, "[SHODAN] return IP passive info or actively check default creds"),
-		IPOnly:      flag.Bool("ips", false, "[SHODAN] setting ips will ONLY return a list of IPs that match the query, requires -passive"),
-		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
-		Port:        flag.String("port", "", "port number"),
-		Path:        flag.String("path", "/", "/path/to/login_page"),
-		Method:      flag.String("method", "", "HTTP Method"),
+		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
 		BasicAuth:   flag.String("basic-auth", "", "base64-decoded (plain-text) BasicAuth header value (username:password)"),
+		Cidr:        flag.String("cidr", "", "specify CIDR range instead of list of individual IPs"),
 		ContentType: flag.String("content", "", "payload content type"),
+		Credentials: flag.String("creds", "", "'username:password' formatted string for tcp connections"),
+		Data:        flag.String("data", "", "POST form data"),
+		DumpList:    flag.String("dumplist", "", "path to file with format '[ip]:[port] [user]:[pass]'"),
+		Pages:       flag.Int("pages", 1, "[SHODAN] # of page results to return"),
 		HeaderName:  flag.String("headername", "", "set a single header name"),
 		HeaderValue: flag.String("headervalue", "", "set a single header value"),
-		Data:        flag.String("data", "", "POST form data"),
-		Success:     flag.String("success", "", "string match for successful login"),
-		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
-		OutputFile:  flag.String("out", "", "/path/to/outputfile"),
-		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
+		IPOnly:      flag.Bool("ips", false, "[SHODAN] setting ips will ONLY return a list of IPs that match the query, requires -passive"),
+		List:        flag.String("list", "", "/path/to/ip_list"),
 		Masscan:     flag.Bool("masscan", false, "use masscan with -scan option. masscan must be installed. requires -cidr [range]"),
-		Username:    flag.String("user", "", "username for tcp connections"),
+		Method:      flag.String("method", "", "HTTP Method"),
+		OutputFile:  flag.String("out", "", "/path/to/outputfile"),
+		Passive:     flag.Bool("passive", false, "[SHODAN] return IP passive info or actively check default creds"),
 		Password:    flag.String("pass", "", "password for tcp connections"),
-		Credentials: flag.String("creds", "", "'username:password' formatted string for tcp connections"),
-		DumpList:    flag.String("dumplist", "", "path to file with format '[ip]:[port] [user]:[pass]'"),
+		Path:        flag.String("path", "/", "/path/to/login_page"),
+		Port:        flag.String("port", "", "port number"),
+		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
+		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
+		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
+		Success:     flag.String("success", "", "string match for successful login"),
+		Telnet:      flag.Bool("telnet", false, "force telnet connection on non-standard port"),
+		Username:    flag.String("user", "", "username for tcp connections"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
 	WebConfig   = flag.String("webconfig", "", "Needs URL to config.json as argument")
