@@ -151,6 +151,6 @@ func doIPList(lines []string) {
 			TelnetPreflight(line, ip, Port, user, pass, Alert, OutputFile)
 			return
 		}(line)
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(400 * time.Millisecond)
 	}
 }
