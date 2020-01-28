@@ -30,6 +30,11 @@ var (
 	Password = *Conf.Password
 )
 
+var (
+	nouserRE = regexp.MustCompile(`^:.+`)
+	nopassRE = regexp.MustCompile(`.+:$`)
+)
+
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
@@ -125,6 +130,7 @@ func doList(lines []string) {
 }
 
 /*
+// Keeping this around for a bit in case things go south:
 func doIPList(lines []string) {
 	listMatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:[0-9]{1,5})?(\s+|\t+)?$`)
 	for _, line := range lines {

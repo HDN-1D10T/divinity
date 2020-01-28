@@ -13,8 +13,6 @@ import (
 const timeout = 2 * time.Second
 
 var (
-	nouserRE = regexp.MustCompile(`^:.+`)
-	nopassRE = regexp.MustCompile(`.+:$`)
 	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE   = regexp.MustCompile(".*[Pp]assword.*")
 	promptRE = regexp.MustCompile(`.*[#\$>].*`)
@@ -76,11 +74,8 @@ func Telnet(ip, port, user, pass, alert, outputFile string) {
 		promptString := string(prompt)
 		if promptRE.MatchString(promptString) {
 			if !badRE.MatchString(promptString) {
-				msg := fmt.Sprintf("%s:23 %s:%s %s\n", ip, user, pass, alert)
-				fmt.Printf(msg)
-				if len(outputFile) > 0 {
-					util.FileWrite(msg, outputFile)
-				}
+				msg := fmt.Sprintf("%s:23 %s:%s %s", ip, user, pass, alert)
+				util.LogWrite(msg)
 			}
 		}
 	}

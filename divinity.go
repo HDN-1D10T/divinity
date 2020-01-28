@@ -41,6 +41,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/HDN-1D10T/divinity/src/util"
+
 	"github.com/HDN-1D10T/divinity/src/config"
 	"github.com/HDN-1D10T/divinity/src/masscan"
 	"github.com/HDN-1D10T/divinity/src/portscanner"
@@ -63,19 +65,6 @@ func makeRange(min, max int) []int {
 		r[i] = min + i
 	}
 	return r
-}
-
-func filewrite(chunk, outputFile string) {
-	f, err := os.OpenFile(outputFile,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	check(err)
-	defer f.Close()
-	if _, err := f.WriteString(chunk + "\n"); err != nil {
-		log.Panicln(err)
-	}
-	if err := f.Sync(); err != nil {
-		log.Panicln(err)
-	}
 }
 
 func inc(ip net.IP) {
@@ -147,7 +136,6 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 	data := *conf.Data
 	success := *conf.Success
 	alert := *conf.Alert
-	outputFile := *conf.OutputFile
 	urlString := protocol + "://" + ip + ":" + port + path
 	creds := getCreds(credentials, user, pass)
 	user = strings.Split(creds, ":")[0]
@@ -185,17 +173,11 @@ func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
 		check(err)
 		if strings.Contains(bodyString, success) {
 			msg := ip + "\t" + alert
-			println(msg)
-			if len(outputFile) > 0 {
-				filewrite(msg, outputFile)
-			}
+			util.LogWrite(msg)
 		}
 	} else if len(basicAuth) > 0 {
 		msg := ip + "\t" + alert
-		println(msg)
-		if len(outputFile) > 0 {
-			filewrite(msg, outputFile)
-		}
+		util.LogWrite(msg)
 	}
 }
 
@@ -234,7 +216,6 @@ func main() {
 	masscan := *conf.Masscan
 	cidr := *conf.Cidr
 	ipsOnly := *conf.IPOnly
-	outputFile := *conf.OutputFile
 	port := *conf.Port
 	if len(cidr) > 0 {
 		//Process IPs from CIDR range
@@ -342,18 +323,12 @@ func main() {
 			if ipsOnly {
 				for _, host := range hostSearch.Matches {
 					msg := host.IPString
-					fmt.Println(msg)
-					if len(outputFile) > 0 {
-						filewrite(msg, outputFile)
-					}
+					util.LogWrite(msg)
 				}
 			} else {
 				for _, host := range hostSearch.Matches {
 					msg := host.IPString + "\t\t" + host.Location.CountryName
-					fmt.Println(msg)
-					if len(outputFile) > 0 {
-						filewrite(msg, outputFile)
-					}
+					util.LogWrite(msg)
 				}
 			}
 		}
