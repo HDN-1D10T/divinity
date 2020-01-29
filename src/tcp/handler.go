@@ -1,11 +1,11 @@
 package tcp
 
 import (
-	"fmt"
 	"log"
 	"regexp"
+	"runtime"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/HDN-1D10T/divinity/src/config"
 )
@@ -35,6 +35,8 @@ var (
 	nopassRE = regexp.MustCompile(`.+:$`)
 )
 
+var wg sync.WaitGroup
+
 // GetCreds returns username string and password string
 func GetCreds(credString string) (string, string) {
 	if len(Username) > 0 || len(Password) > 0 {
@@ -61,7 +63,7 @@ func GetCreds(credString string) (string, string) {
 		}
 	}
 	creds = strings.Split(credString, ":")
-	if len(*Conf.Credentials) > 0 {
+	if len(creds) > 0 {
 		if len(creds) > 1 {
 			if nouserRE.MatchString(creds[0]) {
 				user := ""
@@ -109,17 +111,19 @@ func Handler(lines []string) {
 }
 
 func doList(lines []string) {
+	runtime.GOMAXPROCS(100)
 	listMatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:[0-9]{1,5})?.*:?.*`)
 	for _, line := range lines {
+		wg.Add(1)
 		go func(line string) {
+			defer wg.Done()
 			if !listMatch.MatchString(line) {
 				log.Println("string formatted incorrectly: " + line)
 				return
 			}
 			connectionString := strings.Split(line, " ")
 			hostString, credString := func(connectionString []string) (string, string) {
-				if len(connectionString) == 2 {
-					fmt.Println(len(connectionString))
+				if len(connectionString) > 1 {
 					hostString := connectionString[0]
 					credString := connectionString[1]
 					hostString = strings.Replace(hostString, " ", "", -1)
@@ -136,6 +140,7 @@ func doList(lines []string) {
 			}
 			return
 		}(line)
-		time.Sleep(50 * time.Millisecond)
+		wg.Wait()
+		// time.Sleep(50 * time.Millisecond)
 	}
 }
