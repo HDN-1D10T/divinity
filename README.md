@@ -35,8 +35,8 @@ Enjoy and contribute!
 |----------------|-----------------|
 |`-config`|path to a JSON config file   |
 |`-webconfig`|URL to a JSON config file    |
-|`-list`|path to list of IPs (value `-` or `stdin` allows processing from `stdin` instead of file)|
-|`-dumplist`|path to file with format `[ip]:[port] [user]:[pass]`|
+|`-list`|path to list in format `IP`, `IP<:PORT>`, or `IP<:PORT> <USER:PASS>`|
+|`-list -` or `-list stdin`|allows processing from `stdin` instead of file)|
 |`-cidr`|specify a CIDR range of IP addresses to run login tests or scan against|
 |`-out`|specify file name or file path to save results 
 |`-protocol`|specify if login target uses `HTTP`, `HTTPS`, or generic `TCP`|
@@ -143,3 +143,6 @@ Let's say you wanted to find a list of IPs on a local network that were running 
 
 `divinity -scan -cidr 192.168.1.0/24 -port 23 | divinity -protocol tcp -port 23 -creds admin:admin -list - -out default_creds.txt`
 
+#### Check for default creds whether host is listening or not:
+
+`divinity -cidr 192.168.1.0/24 -protocol tcp -port 23 -creds root:root`
