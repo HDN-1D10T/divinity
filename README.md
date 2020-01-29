@@ -54,6 +54,9 @@ Enjoy and contribute!
 |`-success`|string to match on that *ONLY* appears in successful login response|
 |`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
 |`-scan`|actively scan IP range (if used with -masscan, requires `sudo`, `masscan`, and `-cidr`)|
+|`-all`|used with `-scan` - will scan all ports|
+|`-top`|used with `-scan` - will scan top ports|
+
 ---
 ### Shodan Configuration Parameters (optional):
 If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
