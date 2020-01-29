@@ -106,7 +106,7 @@ func mScan(cidr string) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(24)
+	runtime.GOMAXPROCS(100)
 	var wg = sync.WaitGroup{}
 	conf := Configuration{
 		config.ParseConfiguration(),
