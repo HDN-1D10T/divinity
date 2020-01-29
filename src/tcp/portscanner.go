@@ -12,7 +12,7 @@ import (
 
 func worker(ports, results chan int, host string) {
 	for p := range ports {
-		// log.Printf("Trying %s:%d...\n", host, p)
+		//log.Printf("Trying %s:%d...\n", host, p)
 		address := fmt.Sprintf("%s:%d", host, p)
 		conn, err := net.DialTimeout("tcp", address, 500*time.Millisecond)
 		if err != nil {
@@ -34,6 +34,7 @@ func Scan(host string) {
 	for i := 0; i < cap(ports); i++ {
 		go worker(ports, results, host)
 	}
+
 	// Single Port
 	if len(*Conf.Port) > 0 {
 		thePort, _ := strconv.Atoi(*Conf.Port)

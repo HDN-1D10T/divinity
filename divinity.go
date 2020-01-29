@@ -34,7 +34,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/HDN-1D10T/divinity/src/util"
 
@@ -129,17 +128,13 @@ func main() {
 			}
 			for _, host := range ips {
 				// Scan with native scanner
-				go func() {
-					tcp.Scan(host)
-				}()
-				time.Sleep(500 * time.Millisecond)
+				tcp.Scan(host)
 			}
 		}
 		if protocol == "tcp" {
 			tcp.Handler(ips)
 		}
 		if protocol == "http" || protocol == "https" {
-			//wg.Add(len(ips))
 			for _, host := range ips {
 				wg.Add(1)
 				go tcp.DoHTTPLogin(host, &wg)
