@@ -17,7 +17,6 @@ type Options struct {
 	ContentType *string `json:"content"`
 	Credentials *string `json:"creds"`
 	Data        *string `json:"data"`
-	DumpList    *string `json:"dumplist"`
 	List        *string `json:"list"`
 	HeaderName  *string `json:"headername"`
 	HeaderValue *string `json:"headervalue"`
@@ -47,7 +46,6 @@ var (
 		ContentType: flag.String("content", "", "payload content type"),
 		Credentials: flag.String("creds", "", "'username:password' formatted string for tcp connections"),
 		Data:        flag.String("data", "", "POST form data"),
-		DumpList:    flag.String("dumplist", "", "path to file with format '[ip]:[port] [user]:[pass]'"),
 		Pages:       flag.Int("pages", 1, "[SHODAN] # of page results to return"),
 		HeaderName:  flag.String("headername", "", "set a single header name"),
 		HeaderValue: flag.String("headervalue", "", "set a single header value"),

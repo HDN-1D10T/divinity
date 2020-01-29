@@ -26,13 +26,8 @@ package main
 
 import (
 	"bufio"
-	"crypto/tls"
-	"encoding/base64"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
-	"net/http"
 	"os"
 	"regexp"
 	"runtime"
@@ -52,12 +47,6 @@ import (
 
 // Configuration imported from src/config
 type Configuration struct{ config.Options }
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func makeRange(min, max int) []int {
 	r := make([]int, max-min+1)
@@ -83,7 +72,7 @@ func getIPsFromCIDR(cidr string) ([]string, error) {
 		os.Exit(1)
 	}
 	ip, ipnet, err := net.ParseCIDR(cidr)
-	check(err)
+	util.PanicErr(err)
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
 		ips = append(ips, ip.String())
 	}
@@ -93,92 +82,6 @@ func getIPsFromCIDR(cidr string) ([]string, error) {
 	}
 	// remove network address and broadcast address
 	return ips[1 : len(ips)-1], nil
-}
-
-func getCreds(credentials, user, pass string) string {
-	if len(credentials) > 0 {
-		return credentials
-	}
-	var creds = user + ":" + pass
-	return creds
-}
-
-var m = sync.RWMutex{}
-
-func doLogin(ip string, conf Configuration, wg *sync.WaitGroup) {
-	m.RLock()
-	defer m.RUnlock()
-	defer wg.Done()
-	client := &http.Client{
-		Transport: &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout:   10 * time.Second,
-				KeepAlive: 10 * time.Second,
-			}).Dial,
-			TLSHandshakeTimeout:   5 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-			ExpectContinueTimeout: 10 * time.Second,
-			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-	protocol := *conf.Protocol
-	port := *conf.Port
-	path := *conf.Path
-	method := *conf.Method
-	basicAuth := *conf.BasicAuth
-	basicAuth = base64.StdEncoding.EncodeToString([]byte(basicAuth))
-	user := *conf.Username
-	pass := *conf.Password
-	credentials := *conf.Credentials
-	contentType := *conf.ContentType
-	headerName := *conf.HeaderName
-	headerValue := *conf.HeaderValue
-	data := *conf.Data
-	success := *conf.Success
-	alert := *conf.Alert
-	urlString := protocol + "://" + ip + ":" + port + path
-	creds := getCreds(credentials, user, pass)
-	user = strings.Split(creds, ":")[0]
-	pass = strings.Split(creds, ":")[1]
-	log.Println("Trying " + ip + " ...")
-	// HTTP Request
-	req, err := http.NewRequest(method, urlString, strings.NewReader(data))
-	check(err)
-	if len(headerName) > 0 {
-		req.Header.Set(headerName, headerValue)
-	}
-	if len(basicAuth) > 0 {
-		req.Header.Set("Authorization", "Basic "+basicAuth)
-	}
-	if len(contentType) > 0 {
-		req.Header.Set("Content-Type", contentType)
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return
-	}
-	if err != nil {
-		return
-	}
-	bodyBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return
-	}
-	bodyString := string(bodyBytes)
-	if len(success) > 0 {
-		check(err)
-		if strings.Contains(bodyString, success) {
-			msg := ip + "\t" + alert
-			util.LogWrite(msg)
-		}
-	} else if len(basicAuth) > 0 {
-		msg := ip + "\t" + alert
-		util.LogWrite(msg)
-	}
 }
 
 func mScan(cidr string) {
@@ -208,48 +111,50 @@ func main() {
 	conf := Configuration{
 		config.ParseConfiguration(),
 	}
-	list := *conf.List
-	dumplist := *conf.DumpList
-	shodanSearch := *conf.SearchTerm
-	passive := *conf.Passive
-	scan := *conf.Scan
-	masscan := *conf.Masscan
 	cidr := *conf.Cidr
+	list := *conf.List
 	ipsOnly := *conf.IPOnly
+	masscan := *conf.Masscan
+	passive := *conf.Passive
 	port := *conf.Port
+	protocol := *conf.Protocol
+	scan := *conf.Scan
+	shodanSearch := *conf.SearchTerm
+	// Process list from CIDR range
 	if len(cidr) > 0 {
-		//Process IPs from CIDR range
 		ips, _ := getIPsFromCIDR(cidr)
 		if scan {
 			if masscan {
 				mScan(cidr)
-				os.Exit(0)
-			} else {
-				for _, host := range ips {
-					if len(port) > 1 {
-						// Scan single port
-						go func() {
-							portscanner.Scan(host, port)
-						}()
-						time.Sleep(500 * time.Millisecond)
-					} else {
-						// Scan 1024 ports
-						go func() {
-							portscanner.Scan(host, "all")
-						}()
-						time.Sleep(500 * time.Millisecond)
-					}
+				return
+			}
+			for _, host := range ips {
+				if len(port) > 1 {
+					// Scan single port
+					go func() {
+						portscanner.Scan(host, port)
+					}()
+					time.Sleep(500 * time.Millisecond)
+				} else {
+					// Scan 1024 ports
+					go func() {
+						portscanner.Scan(host, "all")
+					}()
+					time.Sleep(500 * time.Millisecond)
 				}
 			}
-		} else {
-			wg.Add(len(ips))
+		}
+		if protocol == "http" || protocol == "https" {
+			//wg.Add(len(ips))
 			for _, host := range ips {
-				go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
+				wg.Add(1)
+				go tcp.DoHTTPLogin(host, &wg)
 			}
 			wg.Wait()
 		}
-	} else if len(list) == 1 || list == "stdin" {
-		// Process list from stdin
+	}
+	// Process list from stdin
+	if len(list) == 1 || list == "stdin" {
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Split(bufio.ScanLines)
 		var ips []string
@@ -262,13 +167,14 @@ func main() {
 		}
 		wg.Add(len(ips))
 		for _, host := range ips {
-			go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
+			go tcp.DoHTTPLogin(host, &wg)
 		}
 		wg.Wait()
-	} else if len(list) > 1 {
-		// Process list from file
+	}
+	// Process list from file
+	if len(list) > 1 {
 		file, err := os.Open(list)
-		check(err)
+		util.PanicErr(err)
 		defer file.Close()
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
@@ -282,30 +188,19 @@ func main() {
 			return
 		}
 		file.Close()
-		wg.Add(len(ips))
+		// wg.Add(len(ips))
 		for _, host := range ips {
-			go doLogin(host, Configuration{config.ParseConfiguration()}, &wg)
+			wg.Add(1)
+			go tcp.DoHTTPLogin(host, &wg)
 		}
 		wg.Wait()
-	} else if len(dumplist) > 1 {
-		list = dumplist
-		// Process list from file
-		file, err := os.Open(list)
-		check(err)
-		scanner := bufio.NewScanner(file)
-		scanner.Split(bufio.ScanLines)
-		var ips []string
-		for scanner.Scan() {
-			ips = append(ips, scanner.Text())
-		}
-		file.Close()
-		tcp.Handler(ips)
-	} else if passive {
-		// Process list from Shodan
+	}
+	// Process list from Shodan in passive mode
+	if passive {
 		apiKey := os.Getenv("SHODAN_API_KEY")
 		s := shodan.New(apiKey)
 		info, err := s.APIInfo()
-		check(err)
+		util.PanicErr(err)
 		// Get Shodan IP Results
 		if !ipsOnly {
 			fmt.Printf(
@@ -318,7 +213,7 @@ func main() {
 			pageStr := strconv.Itoa(num)
 			query := shodanSearch + "&page=" + pageStr
 			hostSearch, err := s.HostSearch(query)
-			check(err)
+			util.PanicErr(err)
 			// Run config from command line arguments:
 			if ipsOnly {
 				for _, host := range hostSearch.Matches {
@@ -332,12 +227,13 @@ func main() {
 				}
 			}
 		}
-	} else if len(shodanSearch) > 0 {
-		// Get Shodan IP Results
+	}
+	// Shodan active mode
+	if len(shodanSearch) > 0 {
 		apiKey := os.Getenv("SHODAN_API_KEY")
 		s := shodan.New(apiKey)
 		info, err := s.APIInfo()
-		check(err)
+		util.PanicErr(err)
 		fmt.Printf(
 			"Query Credits:\t%d\nScan Credits:\t%d\n\n",
 			info.QueryCredits,
@@ -347,11 +243,11 @@ func main() {
 			pageStr := strconv.Itoa(num)
 			query := shodanSearch + "&page=" + pageStr
 			hostSearch, err := s.HostSearch(query)
-			check(err)
-			wg.Add(len(hostSearch.Matches))
-			// Run config from command line arguments:
+			util.PanicErr(err)
+			// wg.Add(len(hostSearch.Matches))
 			for _, host := range hostSearch.Matches {
-				go doLogin(host.IPString, Configuration{config.ParseConfiguration()}, &wg)
+				wg.Add(1)
+				go tcp.DoHTTPLogin(host.IPString, &wg)
 			}
 			wg.Wait()
 		}

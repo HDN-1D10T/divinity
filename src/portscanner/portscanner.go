@@ -53,7 +53,7 @@ func Scan(host string, portString string) {
 		sort.Ints(openports)
 		for _, port := range openports {
 			host := host
-			msg := fmt.Sprintf("%s:%d\n", host, port)
+			msg := fmt.Sprintf("%s:%d", host, port)
 			util.LogWrite(msg)
 		}
 	} else {
