@@ -10,7 +10,7 @@ import (
 	"github.com/HDN-1D10T/divinity/src/util"
 )
 
-const timeout = 2 * time.Second
+const timeout = 120 * time.Millisecond
 
 var (
 	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
@@ -23,17 +23,14 @@ var (
 func TelnetPreflight(hostString, ip, port, user, pass, Alert, OutputFile string) {
 	if Port == "23" {
 		Telnet(ip, Port, user, pass, Alert, OutputFile)
-		return
 	}
 	if len(strings.Split(hostString, ":")) > 1 {
 		port = strings.Split(hostString, ":")[1]
 		port = strings.Replace(hostString, " ", "", -1)
 		Telnet(ip, port, user, pass, Alert, OutputFile)
-		return
 	}
 	if *Conf.Telnet {
 		Telnet(ip, port, user, pass, Alert, OutputFile)
-		return
 	}
 }
 

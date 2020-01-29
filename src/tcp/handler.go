@@ -141,6 +141,5 @@ func doList(lines []string) {
 			return
 		}(line)
 		wg.Wait()
-		// time.Sleep(50 * time.Millisecond)
 	}
 }
