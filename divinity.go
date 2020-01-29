@@ -40,7 +40,6 @@ import (
 
 	"github.com/HDN-1D10T/divinity/src/config"
 	"github.com/HDN-1D10T/divinity/src/masscan"
-	"github.com/HDN-1D10T/divinity/src/portscanner"
 	"github.com/HDN-1D10T/divinity/src/shodan"
 	"github.com/HDN-1D10T/divinity/src/tcp"
 )
@@ -116,7 +115,6 @@ func main() {
 	ipsOnly := *conf.IPOnly
 	masscan := *conf.Masscan
 	passive := *conf.Passive
-	port := *conf.Port
 	protocol := *conf.Protocol
 	scan := *conf.Scan
 	shodanSearch := *conf.SearchTerm
@@ -124,24 +122,17 @@ func main() {
 	if len(cidr) > 0 {
 		ips, _ := getIPsFromCIDR(cidr)
 		if scan {
+			// Scan with Masscan
 			if masscan {
 				mScan(cidr)
 				return
 			}
 			for _, host := range ips {
-				if len(port) > 1 {
-					// Scan single port
-					go func() {
-						portscanner.Scan(host, port)
-					}()
-					time.Sleep(500 * time.Millisecond)
-				} else {
-					// Scan 1024 ports
-					go func() {
-						portscanner.Scan(host, "all")
-					}()
-					time.Sleep(500 * time.Millisecond)
-				}
+				// Scan with native scanner
+				go func() {
+					tcp.Scan(host)
+				}()
+				time.Sleep(500 * time.Millisecond)
 			}
 		}
 		if protocol == "tcp" {

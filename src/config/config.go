@@ -12,6 +12,7 @@ import (
 // Options struct for Configuration
 type Options struct {
 	Alert       *string `json:"alert"`
+	All         *bool   `json:"all"`
 	BasicAuth   *string `json:"basic-auth"`
 	Cidr        *string `json:"cidr"`
 	ContentType *string `json:"content"`
@@ -33,6 +34,7 @@ type Options struct {
 	SearchTerm  *string `json:"query"`
 	Scan        *bool   `json:"scan"`
 	Success     *string `json:"success"`
+	TopPorts    *bool   `json:"top"`
 	Telnet      *bool   `json:"telnet"`
 	Username    *string `json:"user"`
 }
@@ -41,6 +43,7 @@ type Options struct {
 var (
 	C = Options{
 		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
+		All:         flag.Bool("all", false, "used with -scan to scan all ports"),
 		BasicAuth:   flag.String("basic-auth", "", "base64-decoded (plain-text) BasicAuth header value (username:password)"),
 		Cidr:        flag.String("cidr", "", "specify CIDR range instead of list of individual IPs"),
 		ContentType: flag.String("content", "", "payload content type"),
@@ -62,6 +65,7 @@ var (
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
 		Success:     flag.String("success", "", "string match for successful login"),
+		TopPorts:    flag.Bool("top", false, "used with -scan to scan top ports"),
 		Telnet:      flag.Bool("telnet", false, "force telnet connection on non-standard port"),
 		Username:    flag.String("user", "", "username for tcp connections"),
 	}
