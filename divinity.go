@@ -144,6 +144,9 @@ func main() {
 				}
 			}
 		}
+		if protocol == "tcp" {
+			tcp.Handler(ips)
+		}
 		if protocol == "http" || protocol == "https" {
 			//wg.Add(len(ips))
 			for _, host := range ips {

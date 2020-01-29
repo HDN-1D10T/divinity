@@ -102,7 +102,7 @@ func GetIPPort(connectionString string) (string, string) {
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
-	if len(*Conf.List) > 0 {
+	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
 		doList(lines)
 		return
 	}
@@ -136,6 +136,6 @@ func doList(lines []string) {
 			}
 			return
 		}(line)
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
