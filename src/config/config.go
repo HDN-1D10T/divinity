@@ -33,6 +33,7 @@ type Options struct {
 	Protocol    *string `json:"protocol"`
 	SearchTerm  *string `json:"query"`
 	Scan        *bool   `json:"scan"`
+	SSH         *bool   `json:"ssh"`
 	Success     *string `json:"success"`
 	TopPorts    *bool   `json:"top"`
 	Telnet      *bool   `json:"telnet"`
@@ -63,6 +64,7 @@ var (
 		Port:        flag.String("port", "", "port number"),
 		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
+		SSH:         flag.Bool("ssh", false, "force SSH connection on non-standard port"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
 		Success:     flag.String("success", "", "string match for successful login"),
 		TopPorts:    flag.Bool("top", false, "used with -scan to scan top ports"),
