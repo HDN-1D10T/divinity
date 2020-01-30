@@ -45,13 +45,15 @@ Enjoy and contribute!
 |`-method`|specify HTTP method (usually `GET` or `POST`)|
 |`-basic-auth`|if basic auth is needed, value should be plain-text `username:password` format|
 |`-creds`|same as `-basic-auth`, except for TCP|
-|`-user`|TCP username|
-|`-pass`|TCP password|
+|`-user`|username|
+|`-pass`|password|
 |`-content`|value of `Content-Type` header when used with `-method POST`|
 |`-data`|payload body when used with `-method POST`|
 |`-headername`|specify an additional HTTP request header name|
 |`-headervalue`|specify an additional HTTP request header value when used with `-headername [NAME]`|
 |`-success`|string to match on that *ONLY* appears in successful login response|
+|`-ssh`|force ssh connection over non-standard port|
+|`-telnet`|force telnet connection over non-standard port|
 |`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
 |`-scan`|actively scan IP range (if used with -masscan, requires `sudo`, `masscan`, and `-cidr`)|
 |`-all`|used with `-scan` - will scan all ports|
