@@ -36,7 +36,7 @@ func TelnetPreflight(hostString, ip, port, user, pass, Alert, OutputFile string)
 
 // Telnet - Check for valid credentials
 func Telnet(ip, port, user, pass, alert, outputFile string) {
-	log.Printf("Trying %s:23 %s:%s...\n", ip, user, pass)
+	log.Printf("Trying %s:%s %s:%s...\n", ip, port, user, pass)
 	conn, err := DialTimeout("tcp", ip+":"+port, timeout)
 	if err != nil {
 		//log.Println(err)
