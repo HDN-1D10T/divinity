@@ -71,7 +71,7 @@ func Telnet(ip, port, user, pass, alert, outputFile string) {
 		promptString := string(prompt)
 		if promptRE.MatchString(promptString) {
 			if !badRE.MatchString(promptString) {
-				msg := fmt.Sprintf("%s:23 %s:%s %s", ip, user, pass, alert)
+				msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
 				util.LogWrite(msg)
 			}
 		}
