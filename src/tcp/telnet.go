@@ -3,20 +3,10 @@ package tcp
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/HDN-1D10T/divinity/src/util"
-)
-
-const timeout = 120 * time.Millisecond
-
-var (
-	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
-	passRE   = regexp.MustCompile(".*[Pp]assword.*")
-	promptRE = regexp.MustCompile(`.*[#\$>].*`)
-	badRE    = regexp.MustCompile(`.*[Ii]ncorrect.*`)
 )
 
 // TelnetPreflight - checks if we want to use the telnet protocol and on which port

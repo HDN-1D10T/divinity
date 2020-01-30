@@ -6,12 +6,15 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/HDN-1D10T/divinity/src/config"
 )
 
 // Configuration imported from src/config
 type Configuration struct{ config.Options }
+
+const timeout = 120 * time.Millisecond
 
 var (
 	// Conf - Gets configuration values
@@ -33,6 +36,10 @@ var (
 var (
 	nouserRE = regexp.MustCompile(`^:.+`)
 	nopassRE = regexp.MustCompile(`.+:$`)
+	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
+	passRE   = regexp.MustCompile(".*[Pp]assword.*")
+	promptRE = regexp.MustCompile(`.*[#\$>].*`)
+	badRE    = regexp.MustCompile(`.*([Pp]ermission [Dd]enied)|([Ii]ncorrect).*`)
 )
 
 var wg sync.WaitGroup
@@ -135,8 +142,13 @@ func doList(lines []string) {
 			}(connectionString)
 			ip, port := GetIPPort(hostString)
 			user, pass := GetCreds(credString)
+			if *Conf.SSH || port == "22" {
+				SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
+				return
+			}
 			if *Conf.Telnet || port == "23" {
 				TelnetPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
+				return
 			}
 			return
 		}(line)
