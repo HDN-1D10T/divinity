@@ -141,6 +141,7 @@ func main() {
 			}
 			wg.Wait()
 		}
+		return
 	}
 	// Process list from stdin
 	if len(list) == 1 || list == "stdin" {
@@ -159,6 +160,7 @@ func main() {
 			go tcp.DoHTTPLogin(host, &wg)
 		}
 		wg.Wait()
+		return
 	}
 	// Process list from file
 	if len(list) > 1 {
@@ -183,6 +185,7 @@ func main() {
 			go tcp.DoHTTPLogin(host, &wg)
 		}
 		wg.Wait()
+		return
 	}
 	// Process list from Shodan in passive mode
 	if passive {
@@ -216,6 +219,7 @@ func main() {
 				}
 			}
 		}
+		return
 	}
 	// Shodan active mode
 	if len(shodanSearch) > 0 {
@@ -241,4 +245,5 @@ func main() {
 			wg.Wait()
 		}
 	}
+	return
 }
