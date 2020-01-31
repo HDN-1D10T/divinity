@@ -33,7 +33,7 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 		Auth: []ssh.AuthMethod{
 			ssh.Password(pass),
 		},
-		Timeout:         300 * time.Millisecond,
+		Timeout:         250 * time.Millisecond,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	log.Printf("Trying %s:%s %s:%s...\n", ip, port, user, pass)
