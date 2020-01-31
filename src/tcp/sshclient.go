@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 
@@ -39,10 +40,13 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	go func(conn *ssh.Client) {
+		time.Sleep(300 * time.Millisecond)
+		conn.Close()
+	}(conn)
 	session, err := conn.NewSession()
 	if err != nil {
-		log.Println(err)
+		// log.Println(err)
 		return
 	}
 	sessionErr := session.Run("help")
@@ -50,7 +54,6 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 		session.Close()
 		return
 	}
-	session.Close()
 	msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
 	util.LogWrite(msg)
 	return
