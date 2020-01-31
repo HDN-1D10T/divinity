@@ -42,7 +42,13 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 	defer conn.Close()
 	session, err := conn.NewSession()
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
+		return
+	}
+	sessionErr := session.Run("help")
+	if sessionErr != nil {
+		session.Close()
+		return
 	}
 	session.Close()
 	msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
