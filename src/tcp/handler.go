@@ -39,7 +39,7 @@ var (
 	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE   = regexp.MustCompile(".*[Pp]assword.*")
 	promptRE = regexp.MustCompile(`.*[#\$>].*`)
-	badRE    = regexp.MustCompile(`.*([Pp]assword:)|([Dd]enied)|([Ii]ncorrect).*`)
+	badRE    = regexp.MustCompile(`.*(Using username)|([Pp]assword:)|([Dd]enied)|([Ii]ncorrect).*`)
 )
 
 var wg sync.WaitGroup
