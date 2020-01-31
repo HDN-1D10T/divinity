@@ -33,6 +33,7 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 		Auth: []ssh.AuthMethod{
 			ssh.Password(pass),
 		},
+		Timeout:         300 * time.Millisecond,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	log.Printf("Trying %s:%s %s:%s...\n", ip, port, user, pass)
@@ -40,10 +41,7 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 	if err != nil {
 		return
 	}
-	go func(conn *ssh.Client) {
-		time.Sleep(300 * time.Millisecond)
-		conn.Close()
-	}(conn)
+	defer conn.Close()
 	session, err := conn.NewSession()
 	if err != nil {
 		// log.Println(err)
@@ -54,6 +52,7 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 		session.Close()
 		return
 	}
+	defer session.Close()
 	msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
 	util.LogWrite(msg)
 	return
