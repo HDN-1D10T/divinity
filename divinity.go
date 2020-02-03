@@ -27,12 +27,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/HDN-1D10T/divinity/src/util"
@@ -65,12 +65,10 @@ func inc(ip net.IP) {
 
 func getIPsFromCIDR(cidr string) ([]string, error) {
 	var ips []string
-	if strings.Contains("/32", cidr) {
-		fmt.Println(cidr)
-		os.Exit(1)
-	}
 	ip, ipnet, err := net.ParseCIDR(cidr)
-	util.PanicErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
 		ips = append(ips, ip.String())
 	}
