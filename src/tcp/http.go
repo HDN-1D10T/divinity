@@ -92,6 +92,14 @@ func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 		if strings.Contains(bodyString, success) {
 			msg := ip + "\t" + alert
 			util.LogWrite(msg)
+			return
+		}
+		for _, v := range res.Header {
+			if strings.Contains(strings.Join(v, ""), success) {
+				msg := ip + "\t" + alert
+				util.LogWrite(msg)
+				return
+			}
 		}
 	} else if len(basicAuth) > 0 {
 		msg := ip + "\t" + alert
