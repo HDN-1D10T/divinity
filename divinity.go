@@ -128,6 +128,7 @@ func main() {
 				// Scan with native scanner
 				tcp.Scan(host)
 			}
+			return
 		}
 		if protocol == "tcp" {
 			tcp.Handler(ips)
@@ -147,7 +148,21 @@ func main() {
 		scanner.Split(bufio.ScanLines)
 		var ips []string
 		for scanner.Scan() {
-			ips = append(ips, scanner.Text())
+			if scanner.Text() != "" {
+				ips = append(ips, scanner.Text())
+			}
+		}
+		if scan {
+			// Scan with Masscan
+			if masscan {
+				mScan(cidr)
+				return
+			}
+			for _, host := range ips {
+				// Scan with native scanner
+				tcp.Scan(host)
+			}
+			return
 		}
 		if *conf.Protocol == "tcp" {
 			tcp.Handler(ips)
@@ -163,13 +178,29 @@ func main() {
 	// Process list from file
 	if len(list) > 1 {
 		file, err := os.Open(list)
-		util.PanicErr(err)
+		if err != nil {
+			util.PanicErr(err)
+		}
 		defer file.Close()
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
 		var ips []string
 		for scanner.Scan() {
-			ips = append(ips, scanner.Text())
+			if scanner.Text() != "" {
+				ips = append(ips, scanner.Text())
+			}
+		}
+		if scan {
+			// Scan with Masscan
+			if masscan {
+				mScan(cidr)
+				return
+			}
+			for _, host := range ips {
+				// Scan with native scanner
+				tcp.Scan(host)
+			}
+			return
 		}
 		if *conf.Protocol == "tcp" {
 			tcp.Handler(ips)
