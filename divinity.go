@@ -190,25 +190,18 @@ func main() {
 	passive := *conf.Passive
 	shodanSearch := *conf.SearchTerm
 	// Process list from CIDR range
-	if len(cidr) > 0 || len(cidr) == 1 || cidr == "-list" {
+	if len(cidr) == 1 || cidr == "stdin" {
 		ips := cidrFromStdin()
 		processList(ips)
 		return
 	}
-	if len(cidr) > 2 && len(cidr) < 19 {
-		fmt.Println(cidr)
-		fmt.Println(len(cidr))
+	if len(cidr) > 5 && len(cidr) < 19 {
 		ips, _ := getIPsFromCIDR(cidr)
 		processList(ips)
 		return
 	}
 	// Process list from stdin
 	if len(list) == 1 || list == "stdin" {
-		if len(cidr) > 0 {
-			ips := cidrFromStdin()
-			processList(ips)
-			return
-		}
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Split(bufio.ScanLines)
 		var ips []string
@@ -222,7 +215,7 @@ func main() {
 	}
 	// Process list from file
 	if len(list) > 1 {
-		if len(cidr) > 0 {
+		if cidr == "list" {
 			ips := cidrFromList(list)
 			processList(ips)
 			return
