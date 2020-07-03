@@ -101,6 +101,83 @@ func mScan(cidr string) {
 	}
 }
 
+func cidrFromStdin() (ips []string) {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Split(bufio.ScanLines)
+	var ranges []string
+	for scanner.Scan() {
+		if scanner.Text() != "" {
+			ranges = append(ranges, scanner.Text())
+		}
+	}
+	for _, rangx := range ranges {
+		ipList, _ := getIPsFromCIDR(rangx)
+		for _, ip := range ipList {
+			ips = append(ips, ip)
+		}
+	}
+	return ips
+}
+
+func cidrFromList(list string) (ips []string) {
+	file, err := os.Open(list)
+	if err != nil {
+		util.PanicErr(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var ranges []string
+	for scanner.Scan() {
+		if scanner.Text() != "" {
+			ranges = append(ranges, scanner.Text())
+		}
+	}
+	for _, rangx := range ranges {
+		ipList, _ := getIPsFromCIDR(rangx)
+		for _, ip := range ipList {
+			ips = append(ips, ip)
+		}
+	}
+	return ips
+}
+
+func processList(ips []string) {
+	runtime.GOMAXPROCS(100)
+	var wg = sync.WaitGroup{}
+	conf := Configuration{
+		config.ParseConfiguration(),
+	}
+	cidr := *conf.Cidr
+	masscan := *conf.Masscan
+	protocol := *conf.Protocol
+	scan := *conf.Scan
+	if scan {
+		// Scan with Masscan
+		if masscan {
+			mScan(cidr)
+			return
+		}
+		for _, host := range ips {
+			// Scan with native scanner
+			tcp.Scan(host)
+		}
+		return
+	}
+	if protocol == "tcp" {
+		tcp.Handler(ips)
+	}
+	if protocol == "http" || protocol == "https" {
+		for _, host := range ips {
+			wg.Add(1)
+			go tcp.DoHTTPLogin(host, &wg)
+		}
+		wg.Wait()
+	}
+	return
+
+}
+
 func main() {
 	runtime.GOMAXPROCS(100)
 	var wg = sync.WaitGroup{}
@@ -110,40 +187,28 @@ func main() {
 	cidr := *conf.Cidr
 	list := *conf.List
 	ipsOnly := *conf.IPOnly
-	masscan := *conf.Masscan
 	passive := *conf.Passive
-	protocol := *conf.Protocol
-	scan := *conf.Scan
 	shodanSearch := *conf.SearchTerm
 	// Process list from CIDR range
-	if len(cidr) > 0 {
+	if len(cidr) > 0 || len(cidr) == 1 || cidr == "-list" {
+		ips := cidrFromStdin()
+		processList(ips)
+		return
+	}
+	if len(cidr) > 2 && len(cidr) < 19 {
+		fmt.Println(cidr)
+		fmt.Println(len(cidr))
 		ips, _ := getIPsFromCIDR(cidr)
-		if scan {
-			// Scan with Masscan
-			if masscan {
-				mScan(cidr)
-				return
-			}
-			for _, host := range ips {
-				// Scan with native scanner
-				tcp.Scan(host)
-			}
-			return
-		}
-		if protocol == "tcp" {
-			tcp.Handler(ips)
-		}
-		if protocol == "http" || protocol == "https" {
-			for _, host := range ips {
-				wg.Add(1)
-				go tcp.DoHTTPLogin(host, &wg)
-			}
-			wg.Wait()
-		}
+		processList(ips)
 		return
 	}
 	// Process list from stdin
 	if len(list) == 1 || list == "stdin" {
+		if len(cidr) > 0 {
+			ips := cidrFromStdin()
+			processList(ips)
+			return
+		}
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Split(bufio.ScanLines)
 		var ips []string
@@ -152,31 +217,16 @@ func main() {
 				ips = append(ips, scanner.Text())
 			}
 		}
-		if scan {
-			// Scan with Masscan
-			if masscan {
-				mScan(cidr)
-				return
-			}
-			for _, host := range ips {
-				// Scan with native scanner
-				tcp.Scan(host)
-			}
-			return
-		}
-		if *conf.Protocol == "tcp" {
-			tcp.Handler(ips)
-			return
-		}
-		wg.Add(len(ips))
-		for _, host := range ips {
-			go tcp.DoHTTPLogin(host, &wg)
-		}
-		wg.Wait()
+		processList(ips)
 		return
 	}
 	// Process list from file
 	if len(list) > 1 {
+		if len(cidr) > 0 {
+			ips := cidrFromList(list)
+			processList(ips)
+			return
+		}
 		file, err := os.Open(list)
 		if err != nil {
 			util.PanicErr(err)
@@ -190,30 +240,7 @@ func main() {
 				ips = append(ips, scanner.Text())
 			}
 		}
-		if scan {
-			// Scan with Masscan
-			if masscan {
-				mScan(cidr)
-				return
-			}
-			for _, host := range ips {
-				// Scan with native scanner
-				tcp.Scan(host)
-			}
-			return
-		}
-		if *conf.Protocol == "tcp" {
-			tcp.Handler(ips)
-			file.Close()
-			return
-		}
-		file.Close()
-		// wg.Add(len(ips))
-		for _, host := range ips {
-			wg.Add(1)
-			go tcp.DoHTTPLogin(host, &wg)
-		}
-		wg.Wait()
+		processList(ips)
 		return
 	}
 	// Process list from Shodan in passive mode
