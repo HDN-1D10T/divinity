@@ -104,6 +104,7 @@ The following configurations can be referenced locally with the `-config` parame
     "port": "8443",
     "path": "/data/login",
     "method": "POST",
+    "basic-auth": "admin:password",
     "content": "application/x-www-form-url-encoded",
     "success": "<authResult>0</authResult>"
 }
