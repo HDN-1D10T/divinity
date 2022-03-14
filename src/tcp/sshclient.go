@@ -6,8 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/ssh"
-
+	"github.com/HDN-1D10T/divinity/src/tcp/ssh" // slightly-altered from golang.org/x/crypto/ssh
 	"github.com/HDN-1D10T/divinity/src/util"
 )
 
@@ -33,59 +32,32 @@ func SSH(ip, port, user, pass, alert, outputFile string) {
 		Auth: []ssh.AuthMethod{
 			ssh.Password(pass),
 		},
-		Timeout:         250 * time.Millisecond,
+		Timeout:         time.Duration(*Conf.SSHTimeout) * time.Millisecond,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	log.Printf("Trying %s:%s %s:%s...\n", ip, port, user, pass)
+	// Pass a context with a timeout to tell a blocking function that it
+	// should abandon its work after the timeout elapses.
 	conn, err := ssh.Dial("tcp", ip+":"+port, sshConfig)
-	if err != nil {
+	if err != nil || conn == nil {
 		return
 	}
 	defer conn.Close()
-	session, err := conn.NewSession()
-	if err != nil {
-		// log.Println(err)
-		return
-	}
-	sessionErr := session.Run("help")
-	if sessionErr != nil {
-		session.Close()
-		return
-	}
-	defer session.Close()
+	/*
+		session, err := conn.NewSession()
+		defer session.Close()
+		if err != nil {
+			return
+		}
+	*/
+	/*
+		sessionErr := session.Run("help")
+		if sessionErr != nil {
+			log.Println(sessionErr)
+			return
+		}
+	*/
 	msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
 	util.LogWrite(msg)
 	return
-	//conn.SetReadDeadline(time.Now().Add(time.Second))
-	/*
-			authlogin, err := conn.ReadUntil("login:")
-			if err != nil {
-				//log.Println(err)
-				return
-			}
-
-		conn.SetReadDeadline(time.Now().Add(time.Second))
-		authpass, err := conn.ReadUntil("password:")
-		if err != nil {
-			//log.Println(err)
-			return
-		}
-		passString := string(authpass)
-		if passRE.MatchString(passString) {
-			conn.Write([]byte(pass + "\r\n"))
-			conn.SetReadDeadline(time.Now().Add(time.Second))
-		}
-		prompt, err := conn.ReadUntil("$", ">", "#")
-		if err != nil {
-			//log.Println(err)
-			return
-		}
-		promptString := string(prompt)
-		if promptRE.MatchString(promptString) {
-			if !badRE.MatchString(promptString) {
-				msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
-				util.LogWrite(msg)
-			}
-		}
-	*/
 }

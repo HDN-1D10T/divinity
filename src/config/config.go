@@ -34,6 +34,7 @@ type Options struct {
 	SearchTerm  *string `json:"query"`
 	Scan        *bool   `json:"scan"`
 	SSH         *bool   `json:"ssh"`
+	SSHTimeout  *int    `json:"sshtimeout"`
 	Success     *string `json:"success"`
 	TopPorts    *bool   `json:"top"`
 	Telnet      *bool   `json:"telnet"`
@@ -65,6 +66,7 @@ var (
 		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
 		SSH:         flag.Bool("ssh", false, "force SSH connection on non-standard port"),
+		SSHTimeout:  flag.Int("sshtimeout", 2500, "timeout in milliseconds to receive SSH response (longer is more accurate)"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
 		Success:     flag.String("success", "", "string match for successful login"),
 		TopPorts:    flag.Bool("top", false, "used with -scan to scan top ports"),
