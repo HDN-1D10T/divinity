@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HDN-1D10T/divinity/src/util"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -45,9 +44,7 @@ func SSHPreflight(messages chan string, ipInfo chan IPinfo) {
 				messages <- "Trying " + ip + ":" + sshport + " " + user + ":" + pass + "..."
 				conn, _ := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
 				if conn != nil {
-					msg := ip + ":" + sshport + " " + user + ":" + pass + " " + alert
-					util.FileWrite(msg)
-					messages <- msg
+					messages <- ip + ":" + sshport + " " + user + ":" + pass + " " + alert
 					conn.Close()
 				}
 			}()

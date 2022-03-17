@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/HDN-1D10T/divinity/src/config"
+	"github.com/HDN-1D10T/divinity/src/util"
 )
 
 // Configuration imported from src/config
@@ -155,6 +156,7 @@ func doList(ipinfo chan IPinfo, lines []string) {
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
+	alertMatch := regexp.MustCompile(".*" + Alert + ".*")
 	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
 		ipInfo := make(chan IPinfo, 0)
 		// get all of the ip info:
@@ -170,7 +172,11 @@ func Handler(lines []string) {
 				close(messages)
 			}()
 			for msg := range messages {
-				log.Println(msg)
+				if alertMatch.MatchString(msg) {
+					util.LogWrite(msg)
+				} else {
+					log.Println(msg)
+				}
 			}
 		}
 		if *Conf.Telnet || *Conf.Port == "23" {
