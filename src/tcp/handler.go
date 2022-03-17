@@ -186,7 +186,7 @@ func Handler(lines []string) {
 						return
 					}
 					fmt.Print("\033[K")
-					fmt.Print(time.RFC3339, ": "+msg+"\r")
+					log.Print(msg + "\r")
 				case msg, open := <-messages:
 					if !open {
 						close(exit)
