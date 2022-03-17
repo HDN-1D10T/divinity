@@ -176,7 +176,7 @@ func Handler(lines []string) {
 				if alertMatch.MatchString(msg) {
 					util.FileWrite(msg + "\n")
 					fmt.Println(msg)
-				} else {
+				} else if msg != "nil" {
 					log.Println(msg)
 				}
 			}

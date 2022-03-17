@@ -42,9 +42,45 @@ func SSHPreflight(messages chan string, ipInfo chan IPinfo) {
 			}
 			go func() {
 				messages <- "Trying " + ip + ":" + sshport + " " + user + ":" + pass + "..."
-				conn, _ := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
+				conn, err := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
+				if err != nil {
+					messages <- "nil"
+				}
 				if conn != nil {
-					messages <- ip + ":" + sshport + " " + user + ":" + pass + " " + alert
+					// start session
+					sess, err := conn.NewSession()
+					if err != nil {
+						messages <- "nil"
+					}
+					status := func() bool {
+						if sess != nil {
+							//sess.Stdout = os.Stdout
+							//sess.Stderr = os.Stderr
+							// run single command
+							err = sess.Run("ps")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("help")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("sh help")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("?")
+							if err == nil {
+								return true
+							}
+							return false
+						}
+						return false
+					}()
+					if status {
+						messages <- ip + ":" + sshport + " " + user + ":" + pass + " " + alert
+						sess.Close()
+					}
 					conn.Close()
 				}
 			}()
