@@ -157,6 +157,9 @@ func doList(ipinfo chan IPinfo, lines []string) {
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
+	completionTime := time.Duration(*Conf.Timeout) * time.Millisecond
+	completionTime = time.Duration(len(lines)) * completionTime
+	fmt.Println("Estimated time to complete: ", completionTime)
 	alertMatch := regexp.MustCompile(".*" + Alert + ".*")
 	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
 		ipInfo := make(chan IPinfo, 0)
@@ -165,21 +168,49 @@ func Handler(lines []string) {
 			doList(ipInfo, lines)
 			close(ipInfo)
 		}()
+		status := make(chan string, 0)
 		messages := make(chan string, 0)
+		exit := make(chan struct{})
 		if *Conf.SSH || *Conf.Port == "22" {
 			//SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
 			go func() {
-				SSHPreflight(messages, ipInfo)
+				SSHPreflight(status, messages, ipInfo)
+				close(status)
 				close(messages)
 			}()
-			for msg := range messages {
-				if alertMatch.MatchString(msg) {
-					util.FileWrite(msg + "\n")
-					fmt.Println(msg)
-				} else if msg != "nil" {
-					log.Println(msg)
+			for {
+				select {
+				case msg, open := <-status:
+					if !open {
+						close(exit)
+						return
+					}
+					fmt.Print("\033[K")
+					fmt.Print(time.RFC3339, ": "+msg+"\r")
+				case msg, open := <-messages:
+					if !open {
+						close(exit)
+						return
+					}
+					if alertMatch.MatchString(msg) {
+						fmt.Print("\033[K")
+						util.FileWrite(msg + "\n")
+						fmt.Println(msg)
+					} else if msg != "nil" {
+						log.Println(msg)
+					}
 				}
 			}
+			/*
+				for msg := range messages {
+					if alertMatch.MatchString(msg) {
+						util.FileWrite(msg + "\n")
+						fmt.Println(msg)
+					} else if msg != "nil" {
+						log.Println(msg)
+					}
+				}
+			*/
 		}
 		if *Conf.Telnet || *Conf.Port == "23" {
 			ipInfo = make(chan IPinfo, 0)
