@@ -174,7 +174,7 @@ func Handler(lines []string) {
 			}()
 			for msg := range messages {
 				if alertMatch.MatchString(msg) {
-					util.FileWrite(msg)
+					util.FileWrite(msg + "\n")
 					fmt.Println(msg)
 				} else {
 					log.Println(msg)
