@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"runtime"
@@ -173,7 +174,8 @@ func Handler(lines []string) {
 			}()
 			for msg := range messages {
 				if alertMatch.MatchString(msg) {
-					util.LogWrite(msg)
+					util.FileWrite(msg)
+					fmt.Println(msg)
 				} else {
 					log.Println(msg)
 				}
