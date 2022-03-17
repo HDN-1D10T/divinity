@@ -1,63 +1,54 @@
 package tcp
 
 import (
-	"fmt"
-	"log"
 	"strings"
 	"time"
 
-	"github.com/HDN-1D10T/divinity/src/tcp/ssh" // slightly-altered from golang.org/x/crypto/ssh
-	"github.com/HDN-1D10T/divinity/src/util"
+	"golang.org/x/crypto/ssh"
 )
 
-// SSHPreflight - checks if we want to use the telnet protocol and on which port
-func SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile string) {
-	if Port == "22" {
-		SSH(ip, Port, user, pass, Alert, OutputFile)
-	}
-	if len(strings.Split(hostString, ":")) > 1 {
-		port = strings.Split(hostString, ":")[1]
-		port = strings.Replace(hostString, " ", "", -1)
-		SSH(ip, port, user, pass, Alert, OutputFile)
-	}
-	if *Conf.SSH {
-		SSH(ip, port, user, pass, Alert, OutputFile)
-	}
-}
-
-// SSH - Check for valid credentials
-func SSH(ip, port, user, pass, alert, outputFile string) {
-	sshConfig := &ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(pass),
-		},
-		Timeout:         time.Duration(*Conf.SSHTimeout) * time.Millisecond,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-	log.Printf("Trying %s:%s %s:%s...\n", ip, port, user, pass)
-	// Pass a context with a timeout to tell a blocking function that it
-	// should abandon its work after the timeout elapses.
-	conn, err := ssh.Dial("tcp", ip+":"+port, sshConfig)
-	if err != nil || conn == nil {
-		return
-	}
-	defer conn.Close()
-	/*
-		session, err := conn.NewSession()
-		defer session.Close()
-		if err != nil {
-			return
+// SSHPreflight - checks if we want to use the SSH protocol and on which port
+func SSHPreflight(messages chan string, ipInfo chan IPinfo) {
+	for info := range ipInfo {
+		hostString := info.hostString
+		ip := info.ip
+		port := info.port
+		user := info.user
+		pass := info.pass
+		alert := info.alert
+		doSSH, sshport := func() (bool, string) {
+			if port == "22" {
+				return true, port
+			}
+			if len(strings.Split(hostString, ":")) > 1 {
+				port = strings.Split(hostString, ":")[1]
+				port = strings.Replace(hostString, " ", "", -1)
+				return true, port
+			}
+			if *Conf.SSH {
+				return true, port
+			}
+			return false, ""
+		}()
+		if doSSH {
+			sshConfig := &ssh.ClientConfig{
+				User: user,
+				Auth: []ssh.AuthMethod{
+					ssh.Password(pass),
+				},
+				//Timeout: time.Duration(*Conf.SSHTimeout) * time.Millisecond,
+				Timeout:         time.Duration(10 * time.Second),
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			}
+			go func() {
+				messages <- "Trying " + ip + ":" + sshport + " " + user + ":" + pass + "..."
+				conn, _ := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
+				if conn != nil {
+					messages <- ip + ":" + sshport + " " + user + ":" + pass + " " + alert
+					conn.Close()
+				}
+			}()
+			time.Sleep(time.Duration(*Conf.Timeout) * time.Millisecond)
 		}
-	*/
-	/*
-		sessionErr := session.Run("help")
-		if sessionErr != nil {
-			log.Println(sessionErr)
-			return
-		}
-	*/
-	msg := fmt.Sprintf("%s:%s %s:%s %s", ip, port, user, pass, alert)
-	util.LogWrite(msg)
-	return
+	}
 }

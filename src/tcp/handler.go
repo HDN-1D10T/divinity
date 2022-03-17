@@ -14,6 +14,15 @@ import (
 // Configuration imported from src/config
 type Configuration struct{ config.Options }
 
+type IPinfo struct {
+	hostString string
+	ip         string
+	port       string
+	user       string
+	pass       string
+	alert      string
+}
+
 const timeout = 120 * time.Millisecond
 
 var (
@@ -108,50 +117,79 @@ func GetIPPort(connectionString string) (string, string) {
 	return ip, ""
 }
 
+func doList(ipinfo chan IPinfo, lines []string) {
+	runtime.GOMAXPROCS(100)
+	listMatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:[0-9]{1,5})?.*:?.*`)
+	for _, line := range lines {
+		if !listMatch.MatchString(line) {
+			log.Println("string formatted incorrectly: " + line)
+			return
+		}
+		connectionString := strings.Split(line, " ")
+		hostString, credString := func(connectionString []string) (string, string) {
+			if len(connectionString) > 1 {
+				hostString := connectionString[0]
+				credString := connectionString[1]
+				hostString = strings.Replace(hostString, " ", "", -1)
+				credString = strings.Replace(credString, " ", "", -1)
+				return hostString, credString
+			}
+			hostString := connectionString[0]
+			return hostString, ""
+		}(connectionString)
+		ip, port := GetIPPort(hostString)
+		user, pass := GetCreds(credString)
+		info := IPinfo{
+			hostString: hostString,
+			ip:         ip,
+			port:       port,
+			user:       user,
+			pass:       pass,
+			alert:      Alert,
+		}
+		ipinfo <- info
+		time.Sleep(time.Millisecond)
+	}
+}
+
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
 	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
-		doList(lines)
+		ipInfo := make(chan IPinfo, 0)
+		// get all of the ip info:
+		go func() {
+			doList(ipInfo, lines)
+			close(ipInfo)
+		}()
+		messages := make(chan string, 0)
+		if *Conf.SSH || *Conf.Port == "22" {
+			//SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
+			go func() {
+				SSHPreflight(messages, ipInfo)
+				close(messages)
+			}()
+			for msg := range messages {
+				log.Println(msg)
+			}
+		}
+		if *Conf.Telnet || *Conf.Port == "23" {
+			ipInfo = make(chan IPinfo, 0)
+			go func() {
+				doList(ipInfo, lines)
+				close(ipInfo)
+			}()
+			// TODO: Implement concurrency in Telnet (it is already pretty quick and accurate with -timeout set to 120ms)
+			for info := range ipInfo {
+				hostString := info.hostString
+				ip := info.ip
+				port := info.port
+				user := info.user
+				pass := info.pass
+				alert := info.alert
+				TelnetPreflight(hostString, ip, port, user, pass, alert, OutputFile)
+			}
+		}
 		return
-	}
-}
-
-func doList(lines []string) {
-	runtime.GOMAXPROCS(100)
-	listMatch := regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:[0-9]{1,5})?.*:?.*`)
-	for _, line := range lines {
-		wg.Add(1)
-		go func(line string) {
-			defer wg.Done()
-			if !listMatch.MatchString(line) {
-				log.Println("string formatted incorrectly: " + line)
-				return
-			}
-			connectionString := strings.Split(line, " ")
-			hostString, credString := func(connectionString []string) (string, string) {
-				if len(connectionString) > 1 {
-					hostString := connectionString[0]
-					credString := connectionString[1]
-					hostString = strings.Replace(hostString, " ", "", -1)
-					credString = strings.Replace(credString, " ", "", -1)
-					return hostString, credString
-				}
-				hostString := connectionString[0]
-				return hostString, ""
-			}(connectionString)
-			ip, port := GetIPPort(hostString)
-			user, pass := GetCreds(credString)
-			if *Conf.SSH || port == "22" {
-				SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
-				return
-			}
-			if *Conf.Telnet || port == "23" {
-				TelnetPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
-				return
-			}
-			return
-		}(line)
-		wg.Wait()
 	}
 }

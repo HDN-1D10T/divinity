@@ -34,10 +34,10 @@ type Options struct {
 	SearchTerm  *string `json:"query"`
 	Scan        *bool   `json:"scan"`
 	SSH         *bool   `json:"ssh"`
-	SSHTimeout  *int    `json:"sshtimeout"`
 	Success     *string `json:"success"`
 	TopPorts    *bool   `json:"top"`
 	Telnet      *bool   `json:"telnet"`
+	Timeout     *int    `json:"timeout"`
 	Username    *string `json:"user"`
 }
 
@@ -66,11 +66,11 @@ var (
 		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
 		SSH:         flag.Bool("ssh", false, "force SSH connection on non-standard port"),
-		SSHTimeout:  flag.Int("sshtimeout", 2500, "timeout in milliseconds to receive SSH response (longer is more accurate)"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
 		Success:     flag.String("success", "", "string match for successful login"),
 		TopPorts:    flag.Bool("top", false, "used with -scan to scan top ports"),
 		Telnet:      flag.Bool("telnet", false, "force telnet connection on non-standard port"),
+		Timeout:     flag.Int("timeout", 500, "timeout in milliseconds to receive SSH/Telnet response (longer is more accurate)"),
 		Username:    flag.String("user", "", "username for tcp connections"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
