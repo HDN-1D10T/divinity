@@ -3,6 +3,8 @@ package tcp
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
@@ -154,13 +156,32 @@ func doList(ipinfo chan IPinfo, lines []string) {
 	}
 }
 
+func clearScreen() {
+	if runtime.GOOS == "windows" {
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	} else {
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+}
+
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
-	completionTime := time.Duration(*Conf.Timeout) * time.Millisecond
-	completionTime = time.Duration(len(lines)) * completionTime
-	fmt.Println("Estimated time to complete: ", completionTime)
+	if *Conf.OutputFile == "" {
+		fmt.Println("You MUST specify an output file via '-out [/path/to/file]'")
+		return
+	}
+	totalTimeouts := time.Duration(*Conf.Timeout) * time.Millisecond
+	timeDuration := time.Duration(len(lines)) * totalTimeouts
+	timeStart := time.Now()
+	timeComplete := timeStart.Add(timeDuration)
 	alertMatch := regexp.MustCompile(".*" + Alert + ".*")
+	statusMatch := regexp.MustCompile("^STATUS:.*")
+	successMatch := regexp.MustCompile("^@SUCCESS@.*")
 	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
 		ipInfo := make(chan IPinfo, 0)
 		// get all of the ip info:
@@ -174,7 +195,7 @@ func Handler(lines []string) {
 		if *Conf.SSH || *Conf.Port == "22" {
 			//SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
 			go func() {
-				SSHPreflight(status, messages, ipInfo)
+				SSHPreflight(timeStart, timeDuration, timeComplete, status, messages, ipInfo)
 				close(status)
 				close(messages)
 			}()
@@ -185,32 +206,31 @@ func Handler(lines []string) {
 						close(exit)
 						return
 					}
-					fmt.Print("\033[K")
-					log.Print(msg + "\r")
+					if msg == "CLEARSCREEN" {
+						clearScreen()
+					}
+					if statusMatch.MatchString(msg) {
+						msg = strings.Split(msg, "STATUS:")[1]
+						fmt.Print(msg)
+					} else {
+						fmt.Print(msg)
+					}
 				case msg, open := <-messages:
 					if !open {
 						close(exit)
 						return
 					}
-					if alertMatch.MatchString(msg) {
-						fmt.Print("\033[K")
-						util.FileWrite(msg + "\n")
-						fmt.Println(msg)
+					if successMatch.MatchString(msg) {
+						msg = strings.Split(msg, "@SUCCESS@")[1]
+						if alertMatch.MatchString(msg) {
+							util.FileWrite(msg)
+						}
+						fmt.Print(msg)
 					} else if msg != "nil" {
-						log.Println(msg)
+						fmt.Print(msg)
 					}
 				}
 			}
-			/*
-				for msg := range messages {
-					if alertMatch.MatchString(msg) {
-						util.FileWrite(msg + "\n")
-						fmt.Println(msg)
-					} else if msg != "nil" {
-						log.Println(msg)
-					}
-				}
-			*/
 		}
 		if *Conf.Telnet || *Conf.Port == "23" {
 			ipInfo = make(chan IPinfo, 0)

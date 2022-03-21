@@ -1,14 +1,17 @@
 package tcp
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
 )
 
+var counter = 0
+
 // SSHPreflight - checks if we want to use the SSH protocol and on which port
-func SSHPreflight(status chan string, messages chan string, ipInfo chan IPinfo) {
+func SSHPreflight(timeStart time.Time, timeDuration time.Duration, timeComplete time.Time, status chan string, messages chan string, ipInfo chan IPinfo) {
 	for info := range ipInfo {
 		hostString := info.hostString
 		ip := info.ip
@@ -41,7 +44,18 @@ func SSHPreflight(status chan string, messages chan string, ipInfo chan IPinfo) 
 					Timeout:         time.Duration(10 * time.Second),
 					HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 				}
-				status <- "Trying " + ip + ":" + sshport + " " + user + ":" + pass + "..."
+				timeElapsed := time.Duration(time.Now().Sub(timeStart))
+				timeUntilCompletion := time.Duration(timeComplete.Sub(time.Now()))
+				status <- "CLEARSCREEN"
+				status <- "STATUS:\033[K\r"
+				status <- "STATUS:Start date:\t\t" + timeStart.Format(time.RFC1123) + "\n"
+				status <- "STATUS:Duration:\t\t" + timeDuration.String() + "\n"
+				status <- "STATUS:Elapsed:\t\t" + timeElapsed.String() + "\n"
+				status <- "STATUS:Time until complete:\t" + timeUntilCompletion.String() + "\n"
+				status <- "STATUS:Est. completion date:\t" + timeComplete.Format(time.RFC1123) + "\n"
+				status <- "STATUS:Found:\t\t\t" + strconv.Itoa(counter) + "\n"
+				status <- "STATUS:\n"
+				status <- "Trying " + ip + ":" + sshport + " " + user + ":" + pass + "...\033[K\r"
 				conn, err := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
 				if err != nil {
 					messages <- "nil"
@@ -80,7 +94,9 @@ func SSHPreflight(status chan string, messages chan string, ipInfo chan IPinfo) 
 						return false
 					}()
 					if status {
-						messages <- ip + ":" + sshport + " " + user + ":" + pass + " " + alert
+						counter = counter + 1
+						messages <- "@SUCCESS@\033[K" + ip + ":" + sshport + " " + user + ":" + pass + " " + alert + "\n"
+						messages <- "\n"
 						sess.Close()
 					}
 					conn.Close()
