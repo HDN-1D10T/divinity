@@ -95,7 +95,7 @@ func SSHPreflight(timeStart time.Time, timeDuration time.Duration, timeComplete 
 					}()
 					if status {
 						counter = counter + 1
-						messages <- "@SUCCESS@\033[K" + ip + ":" + sshport + " " + user + ":" + pass + " " + alert + "\n"
+						messages <- "@SUCCESS@" + ip + ":" + sshport + " " + user + ":" + pass + " " + alert + "\n"
 						messages <- "\n"
 						sess.Close()
 					}

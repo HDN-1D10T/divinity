@@ -225,7 +225,7 @@ func Handler(lines []string) {
 						if alertMatch.MatchString(msg) {
 							util.FileWrite(msg)
 						}
-						fmt.Print(msg)
+						fmt.Print("\033[Kmsg")
 					} else if msg != "nil" {
 						fmt.Print(msg)
 					}
