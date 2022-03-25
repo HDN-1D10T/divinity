@@ -1,17 +1,16 @@
 package tcp
 
 import (
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/HDN-1D10T/divinity/src/util"
 	"golang.org/x/crypto/ssh"
 )
 
-var counter = 0
-
 // SSHPreflight - checks if we want to use the SSH protocol and on which port
-func SSHPreflight(timeStart time.Time, timeDuration time.Duration, timeComplete time.Time, status chan string, messages chan string, ipInfo chan IPinfo) {
+func SSHPreflight(chSuccess chan int, ipInfo chan IPinfo) {
+	var successCount = 0
 	for info := range ipInfo {
 		hostString := info.hostString
 		ip := info.ip
@@ -40,69 +39,40 @@ func SSHPreflight(timeStart time.Time, timeDuration time.Duration, timeComplete 
 					Auth: []ssh.AuthMethod{
 						ssh.Password(pass),
 					},
-					//Timeout: time.Duration(*Conf.SSHTimeout) * time.Millisecond,
-					Timeout:         time.Duration(10 * time.Second),
+					Timeout: time.Duration(*Conf.Timeout) * time.Millisecond,
+					//Timeout:         time.Duration(10 * time.Second),
 					HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 				}
-				timeElapsed := time.Duration(time.Now().Sub(timeStart))
-				timeUntilCompletion := time.Duration(timeComplete.Sub(time.Now()))
-				status <- "CLEARSCREEN"
-				status <- "STATUS:\033[K\r"
-				status <- "STATUS:Start date:\t\t" + timeStart.Format(time.RFC1123) + "\n"
-				status <- "STATUS:Duration:\t\t" + timeDuration.String() + "\n"
-				status <- "STATUS:Elapsed:\t\t" + timeElapsed.String() + "\n"
-				status <- "STATUS:Time until complete:\t" + timeUntilCompletion.String() + "\n"
-				status <- "STATUS:Est. completion date:\t" + timeComplete.Format(time.RFC1123) + "\n"
-				status <- "STATUS:Found:\t\t\t" + strconv.Itoa(counter) + "\n"
-				status <- "STATUS:\n"
-				status <- "Trying " + ip + ":" + sshport + " " + user + ":" + pass + "...\033[K\r"
-				conn, err := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
-				if err != nil {
-					messages <- "nil"
-				}
+				//fmt.Print("Trying " + ip + ":" + sshport + " " + user + ":" + pass + "...\033[K\r")
+				conn, _ := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
+				//time.Sleep(time.Duration(*Conf.Timeout) * time.Millisecond)
 				if conn != nil {
 					// start session
 					sess, err := conn.NewSession()
-					if err != nil {
-						messages <- "nil"
-					}
 					status := func() bool {
+						if err != nil {
+							return false
+						}
 						if sess != nil {
 							// run single command
-							err = sess.Run("ps")
+							err = sess.Run("uptime")
 							if err == nil {
 								return true
 							}
-							err = sess.Run("uname -a")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("show help")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("?")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("help")
-							if err == nil {
-								return true
-							}
-							return false
 						}
 						return false
 					}()
 					if status {
-						counter = counter + 1
-						messages <- "@SUCCESS@" + ip + ":" + sshport + " " + user + ":" + pass + " " + alert + "\n"
-						messages <- "\n"
+						successCount += 1
+						msg := ip + ":" + sshport + " " + user + ":" + pass + " " + alert + "\n"
+						//fmt.Print("\033[K\r" + msg)
+						util.FileWrite(msg)
 						sess.Close()
 					}
 					conn.Close()
 				}
+				chSuccess <- successCount
 			}()
-			time.Sleep(time.Duration(*Conf.Timeout) * time.Millisecond)
 		}
 	}
 }

@@ -3,6 +3,7 @@ package tcp
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"regexp"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/HDN-1D10T/divinity/src/config"
-	"github.com/HDN-1D10T/divinity/src/util"
 )
 
 // Configuration imported from src/config
@@ -175,13 +175,8 @@ func Handler(lines []string) {
 		fmt.Println("You MUST specify an output file via '-out [/path/to/file]'")
 		return
 	}
-	totalTimeouts := time.Duration(*Conf.Timeout) * time.Millisecond
-	timeDuration := time.Duration(len(lines)) * totalTimeouts
 	timeStart := time.Now()
-	timeComplete := timeStart.Add(timeDuration)
-	alertMatch := regexp.MustCompile(".*" + Alert + ".*")
-	statusMatch := regexp.MustCompile("^STATUS:.*")
-	successMatch := regexp.MustCompile("^@SUCCESS@.*")
+	qLength := len(lines)
 	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
 		ipInfo := make(chan IPinfo, 0)
 		// get all of the ip info:
@@ -189,48 +184,23 @@ func Handler(lines []string) {
 			doList(ipInfo, lines)
 			close(ipInfo)
 		}()
-		status := make(chan string, 0)
-		messages := make(chan string, 0)
-		exit := make(chan struct{})
+		chSuccess := make(chan int, len(lines))
 		if *Conf.SSH || *Conf.Port == "22" {
-			//SSHPreflight(hostString, ip, port, user, pass, Alert, OutputFile)
-			go func() {
-				SSHPreflight(timeStart, timeDuration, timeComplete, status, messages, ipInfo)
-				close(status)
-				close(messages)
-			}()
-			for {
-				select {
-				case msg, open := <-status:
-					if !open {
-						close(exit)
-						return
-					}
-					if msg == "CLEARSCREEN" {
-						clearScreen()
-					}
-					if statusMatch.MatchString(msg) {
-						msg = strings.Split(msg, "STATUS:")[1]
-						fmt.Print(msg)
-					} else {
-						fmt.Print(msg)
-					}
-				case msg, open := <-messages:
-					if !open {
-						close(exit)
-						return
-					}
-					if successMatch.MatchString(msg) {
-						msg = strings.Split(msg, "@SUCCESS@")[1]
-						if alertMatch.MatchString(msg) {
-							util.FileWrite(msg)
-						}
-						fmt.Print("\033[Kmsg")
-					} else if msg != "nil" {
-						fmt.Print(msg)
-					}
-				}
+			go SSHPreflight(chSuccess, ipInfo)
+			for i := 1; i <= len(lines); i++ {
+				percent := math.Round((float64(i) / float64(qLength)) * 100)
+				successes := <-chSuccess
+				timeElapsed := time.Duration(time.Now().Sub(timeStart))
+				//clearScreen()
+				fmt.Print("Start date:\t\t" + timeStart.Format(time.RFC1123) + "\n")
+				fmt.Print("Elapsed:\t\t" + timeElapsed.String() + "\n")
+				msg := fmt.Sprintf("Progress:\t\t%d/%d [%.2f%%]\n", i, qLength, percent)
+				fmt.Print(msg)
+				msg = fmt.Sprintf("Found:\t\t\t%d/%d\n", successes, qLength)
+				fmt.Print(msg)
+				fmt.Println("-------------------------------------------------------------")
 			}
+			fmt.Print("End date:\t\t" + time.Now().Format(time.RFC1123) + "\n")
 		}
 		if *Conf.Telnet || *Conf.Port == "23" {
 			ipInfo = make(chan IPinfo, 0)
