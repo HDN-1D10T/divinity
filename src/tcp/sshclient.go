@@ -71,8 +71,8 @@ func SSHPreflight(chSuccess chan int, ipInfo chan IPinfo) {
 					}
 					conn.Close()
 				}
-				chSuccess <- successCount
 			}()
 		}
+		chSuccess <- successCount
 	}
 }
