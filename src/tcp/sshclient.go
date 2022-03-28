@@ -59,6 +59,26 @@ func SSHPreflight(chSuccess chan int, ipInfo chan IPinfo) {
 							if err == nil {
 								return true
 							}
+							err = sess.Run("ps")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("ifconfig")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("show help")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("?")
+							if err == nil {
+								return true
+							}
+							err = sess.Run("ipconfig")
+							if err == nil {
+								return true
+							}
 						}
 						return false
 					}()
