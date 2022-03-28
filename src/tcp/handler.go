@@ -3,7 +3,6 @@ package tcp
 import (
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"os/exec"
 	"regexp"
@@ -188,7 +187,7 @@ func Handler(lines []string) {
 		if *Conf.SSH || *Conf.Port == "22" {
 			go SSHPreflight(chSuccess, ipInfo)
 			for i := 1; i <= len(lines); i++ {
-				percent := math.Round((float64(i) / float64(qLength)) * 100)
+				percent := (float64(i) / float64(qLength)) * 100
 				successes := <-chSuccess
 				timeElapsed := time.Duration(time.Now().Sub(timeStart))
 				//clearScreen()

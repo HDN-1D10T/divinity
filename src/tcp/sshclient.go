@@ -39,8 +39,8 @@ func SSHPreflight(chSuccess chan int, ipInfo chan IPinfo) {
 					Auth: []ssh.AuthMethod{
 						ssh.Password(pass),
 					},
-					Timeout: time.Duration(*Conf.Timeout) * time.Millisecond,
-					//Timeout:         time.Duration(10 * time.Second),
+					//Timeout: time.Duration(*Conf.Timeout) * time.Millisecond,
+					Timeout:         time.Duration(5 * time.Second),
 					HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 				}
 				//fmt.Print("Trying " + ip + ":" + sshport + " " + user + ":" + pass + "...\033[K\r")
