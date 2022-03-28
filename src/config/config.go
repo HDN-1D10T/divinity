@@ -13,6 +13,7 @@ import (
 type Options struct {
 	Alert       *string `json:"alert"`
 	All         *bool   `json:"all"`
+	ASN         *string `json:"asn"`
 	BasicAuth   *string `json:"basic-auth"`
 	Cidr        *string `json:"cidr"`
 	ContentType *string `json:"content"`
@@ -32,6 +33,7 @@ type Options struct {
 	Password    *string `json:"pass"`
 	Port        *string `json:"port"`
 	Protocol    *string `json:"protocol"`
+	Routes      *bool   `json:"routes"`
 	SearchTerm  *string `json:"query"`
 	Scan        *bool   `json:"scan"`
 	SSH         *bool   `json:"ssh"`
@@ -47,6 +49,7 @@ var (
 	C = Options{
 		Alert:       flag.String("alert", "SUCCESS", "alert message upon success"),
 		All:         flag.Bool("all", false, "used with -scan to scan all ports"),
+		ASN:         flag.String("asn", "", "used with -routes to show CIDR blocks for ASNumber"),
 		BasicAuth:   flag.String("basic-auth", "", "base64-decoded (plain-text) BasicAuth header value (username:password)"),
 		Cidr:        flag.String("cidr", "", "specify CIDR range instead of list of individual IPs"),
 		ContentType: flag.String("content", "", "payload content type"),
@@ -66,6 +69,7 @@ var (
 		Path:        flag.String("path", "/", "/path/to/login_page"),
 		Port:        flag.String("port", "", "port number"),
 		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
+		Routes:      flag.Bool("routes", false, "get CIDR ranges for ASNumber specified by -asn or from -list"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
 		SSH:         flag.Bool("ssh", false, "force SSH connection on non-standard port"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),

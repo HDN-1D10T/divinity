@@ -170,7 +170,7 @@ func processList(ips []string) {
 		go func() {
 			for i := 0; i <= len(ips)-1; i++ {
 				ip := <-chIPs
-				if len(outputFile) != 0 {
+				if len(outputFile) > 0 {
 					util.FileWrite(ip + "\n")
 				}
 				fmt.Println(ip)
@@ -178,6 +178,17 @@ func processList(ips []string) {
 			chDone <- true
 		}()
 		<-chDone
+		return
+	}
+	if *conf.Routes {
+		asns := ips
+		routes := tcp.GetAllRoutes(asns)
+		for _, route := range routes {
+			if len(outputFile) > 0 {
+				util.FileWrite(route + "\n")
+			}
+			fmt.Println(route)
+		}
 		return
 	}
 	if scan {
@@ -211,11 +222,23 @@ func main() {
 	conf := Configuration{
 		config.ParseConfiguration(),
 	}
+	asn := *conf.ASN
 	cidr := *conf.Cidr
 	list := *conf.List
 	ipsOnly := *conf.IPOnly
 	passive := *conf.Passive
 	shodanSearch := *conf.SearchTerm
+	// Get CIDR range from ASN
+	if len(*conf.ASN) > 1 && *conf.Routes {
+		asnMatch := regexp.MustCompile(`^[Aa][Ss][0-9]+$`)
+		if !asnMatch.MatchString(asn) {
+			asn = "AS" + asn
+		}
+		var asns []string
+		asns = append(asns, asn)
+		tcp.GetAllRoutes(asns)
+		return
+	}
 	// Process list from CIDR range
 	if len(cidr) == 1 || cidr == "stdin" {
 		ips := cidrFromStdin()
