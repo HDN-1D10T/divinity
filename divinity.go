@@ -65,6 +65,11 @@ func inc(ip net.IP) {
 
 func getIPsFromCIDR(cidr string) ([]string, error) {
 	var ips []string
+	allIPs := regexp.MustCompile(`/0$`)
+	if allIPs.MatchString(cidr) {
+		err := "You can't pass a /0. Give me something I can handle."
+		log.Fatal(err)
+	}
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		log.Fatal(err)
@@ -148,10 +153,33 @@ func processList(ips []string) {
 	conf := Configuration{
 		config.ParseConfiguration(),
 	}
+	listIPs := *conf.ListIPs
 	cidr := *conf.Cidr
 	masscan := *conf.Masscan
 	protocol := *conf.Protocol
 	scan := *conf.Scan
+	outputFile := *conf.OutputFile
+	chIPs := make(chan string, len(ips))
+	chDone := make(chan bool)
+	go func() {
+		for _, ip := range ips {
+			chIPs <- ip
+		}
+	}()
+	if listIPs {
+		go func() {
+			for i := 0; i <= len(ips)-1; i++ {
+				ip := <-chIPs
+				if len(outputFile) != 0 {
+					util.FileWrite(ip + "\n")
+				}
+				fmt.Println(ip)
+			}
+			chDone <- true
+		}()
+		<-chDone
+		return
+	}
 	if scan {
 		// Scan with Masscan
 		if masscan {
@@ -175,7 +203,6 @@ func processList(ips []string) {
 		wg.Wait()
 	}
 	return
-
 }
 
 func main() {

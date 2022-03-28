@@ -19,6 +19,7 @@ type Options struct {
 	Credentials *string `json:"creds"`
 	Data        *string `json:"data"`
 	List        *string `json:"list"`
+	ListIPs     *bool   `json:"list-ips"`
 	HeaderName  *string `json:"headername"`
 	HeaderValue *string `json:"headervalue"`
 	IPOnly      *bool   `json:"ips"`
@@ -56,6 +57,7 @@ var (
 		HeaderValue: flag.String("headervalue", "", "set a single header value"),
 		IPOnly:      flag.Bool("ips", false, "[SHODAN] setting ips will ONLY return a list of IPs that match the query, requires -passive"),
 		List:        flag.String("list", "", "/path/to/ip_list"),
+		ListIPs:     flag.Bool("list-ips", false, "return list of IPs from -cidr or -list containing one or more CIDR ranges"),
 		Masscan:     flag.Bool("masscan", false, "use masscan with -scan option. masscan must be installed. requires -cidr [range]"),
 		Method:      flag.String("method", "", "HTTP Method"),
 		OutputFile:  flag.String("out", "", "/path/to/outputfile"),
@@ -70,7 +72,7 @@ var (
 		Success:     flag.String("success", "", "string match for successful login"),
 		TopPorts:    flag.Bool("top", false, "used with -scan to scan top ports"),
 		Telnet:      flag.Bool("telnet", false, "force telnet connection on non-standard port"),
-		Timeout:     flag.Int("timeout", 500, "timeout in milliseconds to receive SSH/Telnet response (longer is more accurate)"),
+		Timeout:     flag.Int("timeout", 500, "timeout in milliseconds to receive Telnet response (longer is more accurate)"),
 		Username:    flag.String("user", "", "username for tcp connections"),
 	}
 	LocalConfig = flag.String("config", "", "Needs /path/to/config.json as argument")
