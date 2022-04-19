@@ -191,6 +191,12 @@ func processList(ips []string) {
 		}
 		return
 	}
+	// -scanfast && -port
+	if *conf.ScanFast && len(*conf.Port) > 0 {
+		tcp.ScanMulti(ips, *conf.Port)
+		return
+	}
+	// -scan
 	if scan {
 		// Scan with Masscan
 		if masscan {

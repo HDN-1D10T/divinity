@@ -36,6 +36,7 @@ type Options struct {
 	Routes      *bool   `json:"routes"`
 	SearchTerm  *string `json:"query"`
 	Scan        *bool   `json:"scan"`
+	ScanFast    *bool   `json:"scanfast"`
 	SSH         *bool   `json:"ssh"`
 	Success     *string `json:"success"`
 	TopPorts    *bool   `json:"top"`
@@ -71,6 +72,7 @@ var (
 		Protocol:    flag.String("protocol", "", "protocol (http or https)"),
 		Routes:      flag.Bool("routes", false, "get CIDR ranges for ASNumber specified by -asn or from -list"),
 		Scan:        flag.Bool("scan", false, "scan for open ports on a host, can use -masscan -cidr [range], or defaults to native portscanner"),
+		ScanFast:    flag.Bool("scanfast", false, "used with -cidr or -list for multiple hosts, launches a multi-threaded scan -- may not be as accurate as single-threaded -scan option"),
 		SSH:         flag.Bool("ssh", false, "force SSH connection on non-standard port"),
 		SearchTerm:  flag.String("query", "", "[SHODAN] Shodan search query"),
 		Success:     flag.String("success", "", "string match for successful login"),
