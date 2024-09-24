@@ -23,7 +23,7 @@ Enjoy and contribute!
 
 ## Installation
 
-`go get github.com/HDN-1D10T/divinity`
+`go install github.com/HDN-1D10T/divinity@latest`
 
 ## Ways to run Divinity
 - **local JSON config file** (specified by `-config [FILE PATH]`)
@@ -56,6 +56,7 @@ Enjoy and contribute!
 |`-telnet`|force telnet connection over non-standard port|
 |`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
 |`-scan`|actively scan IP range (if used with -masscan, requires `sudo`, `masscan`, and `-cidr`)|
+|`-scanfast`|actively scan IP range (super fast, may be less accurate)|
 |`-all`|used with `-scan` - will scan all ports|
 |`-top`|used with `-scan` - will scan top ports|
 
