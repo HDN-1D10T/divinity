@@ -118,6 +118,13 @@ func isStdin(value string) bool {
 	return value == "-" || strings.EqualFold(value, "stdin")
 }
 
+func exitOnErr(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
+}
+
 func cidrFromStdin() (ips []string) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanLines)
@@ -304,7 +311,7 @@ func main() {
 		apiKey := os.Getenv("SHODAN_API_KEY")
 		s := shodan.New(apiKey)
 		info, err := s.APIInfo()
-		util.PanicErr(err)
+		exitOnErr(err)
 		// Get Shodan IP Results
 		if !ipsOnly {
 			fmt.Printf(
@@ -315,7 +322,7 @@ func main() {
 		pageRange := makeRange(1, *conf.Pages)
 		for _, num := range pageRange {
 			hostSearch, err := s.HostSearchPage(shodanSearch, num)
-			util.PanicErr(err)
+			exitOnErr(err)
 			// Run config from command line arguments:
 			if ipsOnly {
 				for _, host := range hostSearch.Matches {
@@ -336,7 +343,7 @@ func main() {
 		apiKey := os.Getenv("SHODAN_API_KEY")
 		s := shodan.New(apiKey)
 		info, err := s.APIInfo()
-		util.PanicErr(err)
+		exitOnErr(err)
 		fmt.Printf(
 			"Query Credits:\t%d\nScan Credits:\t%d\n\n",
 			info.QueryCredits,
@@ -344,7 +351,7 @@ func main() {
 		pageRange := makeRange(1, *conf.Pages)
 		for _, num := range pageRange {
 			hostSearch, err := s.HostSearchPage(shodanSearch, num)
-			util.PanicErr(err)
+			exitOnErr(err)
 			// wg.Add(len(hostSearch.Matches))
 			for _, host := range hostSearch.Matches {
 				wg.Add(1)

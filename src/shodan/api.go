@@ -1,7 +1,6 @@
 package shodan
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -16,14 +15,14 @@ type APIInfo struct {
 }
 
 func (s *Client) APIInfo() (*APIInfo, error) {
-	res, err := http.Get(fmt.Sprintf("%s/api-info?key=%s", BaseURL, s.apiKey))
+	res, err := http.Get(fmt.Sprintf("%s/api-info?key=%s", s.baseURL, s.apiKey))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	var ret APIInfo
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	if err := decodeResponse("Shodan API info", res, &ret); err != nil {
 		return nil, err
 	}
 	return &ret, nil

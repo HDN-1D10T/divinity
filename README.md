@@ -21,6 +21,12 @@ The original project goal is still the same: expose weak deployments that use de
 go install github.com/HDN-1D10T/divinity@latest
 ```
 
+If `sum.golang.org` returns a transient `500 Internal Server Error` while verifying the module, retry first. If it keeps failing, use a scoped checksum-db bypass for this module only:
+
+```sh
+GONOSUMDB=github.com/HDN-1D10T/divinity go install github.com/HDN-1D10T/divinity@latest
+```
+
 From a local checkout:
 
 ```sh

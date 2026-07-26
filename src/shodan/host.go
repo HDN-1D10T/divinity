@@ -1,7 +1,6 @@
 package shodan
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -52,7 +51,7 @@ func (s *Client) HostSearchPage(q string, page int) (*HostSearch, error) {
 	defer res.Body.Close()
 
 	var ret HostSearch
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	if err := decodeResponse("Shodan host search", res, &ret); err != nil {
 		return nil, err
 	}
 
@@ -66,5 +65,5 @@ func (s *Client) hostSearchURL(q string, page int) string {
 	if page > 0 {
 		params.Set("page", strconv.Itoa(page))
 	}
-	return fmt.Sprintf("%s/shodan/host/search?%s", BaseURL, params.Encode())
+	return fmt.Sprintf("%s/shodan/host/search?%s", s.baseURL, params.Encode())
 }
