@@ -10,6 +10,7 @@ func withTCPConfig(t *testing.T, fn func()) {
 	pass := *Conf.Password
 	telnet := *Conf.Telnet
 	ssh := *Conf.SSH
+	httpTimeout := *Conf.HTTPTimeout
 	defer func() {
 		*Conf.Port = port
 		*Conf.Credentials = creds
@@ -17,6 +18,7 @@ func withTCPConfig(t *testing.T, fn func()) {
 		*Conf.Password = pass
 		*Conf.Telnet = telnet
 		*Conf.SSH = ssh
+		*Conf.HTTPTimeout = httpTimeout
 	}()
 	fn()
 }
@@ -78,6 +80,17 @@ func TestHTTPDefaults(t *testing.T) {
 	if got := httpPath("/admin"); got != "/admin" {
 		t.Fatalf("expected existing leading slash to be preserved, got %q", got)
 	}
+	withTCPConfig(t, func() {
+		*Conf.HTTPTimeout = 250
+		if got := httpTimeout().Milliseconds(); got != 250 {
+			t.Fatalf("expected configured HTTP timeout, got %dms", got)
+		}
+
+		*Conf.HTTPTimeout = 0
+		if got := httpTimeout().Milliseconds(); got != 10000 {
+			t.Fatalf("expected non-positive HTTP timeout to fall back to 10000ms, got %dms", got)
+		}
+	})
 }
 
 func TestProtocolPreflightUsesParsedPort(t *testing.T) {

@@ -25,6 +25,7 @@ type Options struct {
 	ListIPs     *bool   `json:"list-ips"`
 	HeaderName  *string `json:"headername"`
 	HeaderValue *string `json:"headervalue"`
+	HTTPTimeout *int    `json:"http-timeout"`
 	IPOnly      *bool   `json:"ips"`
 	Masscan     *bool   `json:"masscan"`
 	Method      *string `json:"method"`
@@ -61,6 +62,7 @@ var (
 		Pages:       flag.Int("pages", 1, "[SHODAN] # of page results to return"),
 		HeaderName:  flag.String("headername", "", "set a single header name"),
 		HeaderValue: flag.String("headervalue", "", "set a single header value"),
+		HTTPTimeout: flag.Int("http-timeout", 10000, "overall HTTP request timeout in milliseconds"),
 		IPOnly:      flag.Bool("ips", false, "[SHODAN] setting ips will ONLY return a list of IPs that match the query, requires -passive"),
 		List:        flag.String("list", "", "/path/to/ip_list, '-' or 'stdin'"),
 		ListIPs:     flag.Bool("list-ips", false, "return list of IPs from -cidr or from -cidr list -list [/path/to/cidr_list]"),
@@ -194,7 +196,7 @@ func (c *Options) setFromJSON(name string, raw json.RawMessage, source string) e
 			return err
 		}
 		return c.setFromString(name, strconv.FormatBool(value))
-	case "pages", "timeout":
+	case "http-timeout", "pages", "timeout":
 		var value int
 		if err := json.Unmarshal(raw, &value); err != nil {
 			return err
@@ -228,6 +230,12 @@ func (c *Options) setFromString(name, value string) error {
 		*c.HeaderName = value
 	case "headervalue":
 		*c.HeaderValue = value
+	case "http-timeout":
+		parsed, err := strconv.Atoi(value)
+		if err != nil {
+			return err
+		}
+		*c.HTTPTimeout = parsed
 	case "method":
 		*c.Method = value
 	case "out":

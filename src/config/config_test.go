@@ -28,6 +28,7 @@ func testOptions() Options {
 		ListIPs:     testBool(false),
 		HeaderName:  testString(""),
 		HeaderValue: testString(""),
+		HTTPTimeout: testInt(10000),
 		IPOnly:      testBool(false),
 		Masscan:     testBool(false),
 		Method:      testString("GET"),
@@ -56,8 +57,9 @@ func TestApplyJSONPreservesOptionPointers(t *testing.T) {
 	originalPort := opts.Port
 	originalScanFast := opts.ScanFast
 	originalPages := opts.Pages
+	originalHTTPTimeout := opts.HTTPTimeout
 
-	err := opts.applyJSON([]byte(`{"port":"8080","scanfast":true,"pages":4,"method":"POST"}`), "test")
+	err := opts.applyJSON([]byte(`{"port":"8080","scanfast":true,"pages":4,"method":"POST","http-timeout":1500}`), "test")
 	if err != nil {
 		t.Fatalf("applyJSON returned error: %v", err)
 	}
@@ -71,8 +73,11 @@ func TestApplyJSONPreservesOptionPointers(t *testing.T) {
 	if opts.Pages != originalPages {
 		t.Fatal("pages pointer was replaced instead of updated")
 	}
-	if *opts.Port != "8080" || !*opts.ScanFast || *opts.Pages != 4 || *opts.Method != "POST" {
-		t.Fatalf("unexpected parsed config: port=%q scanfast=%v pages=%d method=%q", *opts.Port, *opts.ScanFast, *opts.Pages, *opts.Method)
+	if opts.HTTPTimeout != originalHTTPTimeout {
+		t.Fatal("http-timeout pointer was replaced instead of updated")
+	}
+	if *opts.Port != "8080" || !*opts.ScanFast || *opts.Pages != 4 || *opts.Method != "POST" || *opts.HTTPTimeout != 1500 {
+		t.Fatalf("unexpected parsed config: port=%q scanfast=%v pages=%d method=%q http-timeout=%d", *opts.Port, *opts.ScanFast, *opts.Pages, *opts.Method, *opts.HTTPTimeout)
 	}
 }
 
@@ -84,9 +89,10 @@ func TestCLIOverridesReplaceJSONValues(t *testing.T) {
 	}
 
 	err = opts.applyCLIOverrides(map[string]string{
-		"port":     "443",
-		"scanfast": "true",
-		"pages":    "7",
+		"port":         "443",
+		"scanfast":     "true",
+		"pages":        "7",
+		"http-timeout": "3000",
 	})
 	if err != nil {
 		t.Fatalf("applyCLIOverrides returned error: %v", err)
@@ -100,6 +106,9 @@ func TestCLIOverridesReplaceJSONValues(t *testing.T) {
 	}
 	if *opts.Pages != 7 {
 		t.Fatalf("expected CLI pages override, got %d", *opts.Pages)
+	}
+	if *opts.HTTPTimeout != 3000 {
+		t.Fatalf("expected CLI http-timeout override, got %d", *opts.HTTPTimeout)
 	}
 }
 

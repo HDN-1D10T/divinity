@@ -3,7 +3,7 @@ package tcp
 import (
 	"crypto/tls"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -16,20 +16,24 @@ import (
 
 var m = sync.RWMutex{}
 
+const maxHTTPBodyBytes = 10 << 20
+
 // DoHTTPLogin checks for default credentials against an HTTP/HTTS endpoint
 func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 	m.RLock()
 	defer m.RUnlock()
 	defer wg.Done()
+	timeout := httpTimeout()
 	client := &http.Client{
+		Timeout: timeout,
 		Transport: &http.Transport{
 			Dial: (&net.Dialer{
-				Timeout:   10 * time.Second,
-				KeepAlive: 10 * time.Second,
+				Timeout:   timeout,
+				KeepAlive: timeout,
 			}).Dial,
-			TLSHandshakeTimeout:   5 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-			ExpectContinueTimeout: 10 * time.Second,
+			TLSHandshakeTimeout:   timeout,
+			ResponseHeaderTimeout: timeout,
+			ExpectContinueTimeout: timeout,
 			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 		},
 	}
@@ -70,7 +74,7 @@ func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 	if err != nil {
 		return
 	}
-	bodyBytes, err := ioutil.ReadAll(res.Body)
+	bodyBytes, err := io.ReadAll(io.LimitReader(res.Body, maxHTTPBodyBytes))
 	if err != nil {
 		return
 	}
@@ -92,6 +96,14 @@ func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 		msg := ip + "\t" + alert
 		util.LogWrite(msg)
 	}
+}
+
+func httpTimeout() time.Duration {
+	timeout := *Conf.HTTPTimeout
+	if timeout <= 0 {
+		timeout = 10000
+	}
+	return time.Duration(timeout) * time.Millisecond
 }
 
 func httpPort(protocol, port string) string {

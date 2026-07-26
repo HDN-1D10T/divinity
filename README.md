@@ -138,6 +138,7 @@ divinity -cidr list -list cidrs.txt -list-ips -out expanded-ips.txt
 | `-data` | `data` | string | HTTP request body, usually with `-method POST`. |
 | `-headername` | `headername` | string | Additional HTTP request header name. |
 | `-headervalue` | `headervalue` | string | Additional HTTP request header value. Used with `-headername`. |
+| `-http-timeout` | `http-timeout` | int | Overall HTTP request timeout in milliseconds, including connect, headers, and body read. Default: `10000`. |
 | `-success` | `success` | string | String to match in the HTTP response body or response headers. |
 | `-alert` | `alert` | string | Text shown next to successful results. Default: `SUCCESS`. |
 | `-creds` | `creds` | string | TCP credential pair, formatted as `username:password`. Passwords may contain additional `:` characters. |
@@ -205,6 +206,7 @@ Behavior notes:
 - `-method` defaults to `GET`.
 - `-path` defaults to `/`.
 - `http` defaults to port `80` and `https` defaults to port `443` when `-port` is omitted.
+- `-http-timeout` bounds the full request so slow or never-ending hosts cannot stall the scan forever.
 - `-basic-auth` is for HTTP Basic Auth only.
 - `-creds`, `-user`, and `-pass` are TCP credential options, not HTTP form fillers.
 - If `-success` is set, Divinity logs the target only when that string appears in the response body or headers.
