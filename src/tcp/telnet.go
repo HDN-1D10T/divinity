@@ -3,7 +3,6 @@ package tcp
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/HDN-1D10T/divinity/src/util"
@@ -11,17 +10,16 @@ import (
 
 // TelnetPreflight - checks if we want to use the telnet protocol and on which port
 func TelnetPreflight(hostString, ip, port, user, pass, Alert, OutputFile string) {
-	if Port == "23" {
-		Telnet(ip, Port, user, pass, Alert, OutputFile)
-	}
-	if len(strings.Split(hostString, ":")) > 1 {
-		port = strings.Split(hostString, ":")[1]
-		port = strings.Replace(hostString, " ", "", -1)
+	if shouldTelnet(port) {
 		Telnet(ip, port, user, pass, Alert, OutputFile)
 	}
-	if *Conf.Telnet {
-		Telnet(ip, port, user, pass, Alert, OutputFile)
+}
+
+func shouldTelnet(port string) bool {
+	if port == "23" || *Conf.Port == "23" {
+		return true
 	}
+	return *Conf.Telnet && len(port) > 0
 }
 
 // Telnet - Check for valid credentials

@@ -30,24 +30,10 @@ const timeout = 120 * time.Millisecond
 
 var (
 	// Conf - Gets configuration values
-	Conf = Configuration{config.ParseConfiguration()}
-	// Alert ...
-	Alert = *Conf.Alert
-	// OutputFile ...
-	OutputFile = *Conf.OutputFile
-	// Protocol ...
-	Protocol = *Conf.Protocol
-	// Port ...
-	Port = *Conf.Port
-	// Username ...
-	Username = *Conf.Username
-	// Password ...
-	Password = *Conf.Password
+	Conf = Configuration{config.C}
 )
 
 var (
-	nouserRE = regexp.MustCompile(`^:.+`)
-	nopassRE = regexp.MustCompile(`.+:$`)
 	userRE   = regexp.MustCompile(`.*([Ll]ogin)|([Uu]sername).*`)
 	passRE   = regexp.MustCompile(".*[Pp]assword.*")
 	promptRE = regexp.MustCompile(`.*[#\$>].*`)
@@ -58,66 +44,38 @@ var wg sync.WaitGroup
 
 // GetCreds returns username string and password string
 func GetCreds(credString string) (string, string) {
-	if len(Username) > 0 || len(Password) > 0 {
-		user := Username
-		pass := Password
-		return user, pass
+	if len(*Conf.Username) > 0 || len(*Conf.Password) > 0 {
+		return *Conf.Username, *Conf.Password
 	}
-	creds := strings.Split(*Conf.Credentials, ":")
 	if len(*Conf.Credentials) > 0 {
-		if len(creds) > 1 {
-			if nouserRE.MatchString(creds[0]) {
-				user := ""
-				pass := creds[1]
-				return user, pass
-			}
-			if nopassRE.MatchString(creds[1]) {
-				user := creds[0]
-				pass := ""
-				return user, pass
-			}
-			user := creds[0]
-			pass := creds[1]
-			return user, pass
-		}
+		return splitCreds(*Conf.Credentials)
 	}
-	creds = strings.Split(credString, ":")
-	if len(creds) > 0 {
-		if len(creds) > 1 {
-			if nouserRE.MatchString(creds[0]) {
-				user := ""
-				pass := creds[1]
-				return user, pass
-			}
-			if nopassRE.MatchString(creds[1]) {
-				user := creds[0]
-				pass := ""
-				return user, pass
-			}
-			user := creds[0]
-			pass := creds[1]
-			return user, pass
-		}
+	return splitCreds(credString)
+}
+
+func splitCreds(credString string) (string, string) {
+	if len(credString) == 0 {
+		return "", ""
 	}
-	return "", ""
+	creds := strings.SplitN(credString, ":", 2)
+	if len(creds) < 2 {
+		return "", ""
+	}
+	return creds[0], creds[1]
 }
 
 // GetIPPort takes a 'ip:port' string and returns the ip and port
 func GetIPPort(connectionString string) (string, string) {
-	hostString := strings.Split(connectionString, ":")
-	if len(hostString) == 2 {
-		ip := hostString[0]
-		port := hostString[1]
-		if len(Port) > 0 {
-			return ip, Port
-		}
-		return ip, port
-	}
+	hostString := strings.SplitN(strings.TrimSpace(connectionString), ":", 2)
 	ip := hostString[0]
-	if len(Port) > 0 {
-		return ip, Port
+	port := ""
+	if len(hostString) == 2 {
+		port = hostString[1]
 	}
-	return ip, ""
+	if len(*Conf.Port) > 0 {
+		return ip, *Conf.Port
+	}
+	return ip, port
 }
 
 func doList(ipinfo chan IPinfo, lines []string) {
@@ -126,9 +84,9 @@ func doList(ipinfo chan IPinfo, lines []string) {
 	for _, line := range lines {
 		if !listMatch.MatchString(line) {
 			log.Println("string formatted incorrectly: " + line)
-			return
+			continue
 		}
-		connectionString := strings.Split(line, " ")
+		connectionString := strings.Fields(line)
 		hostString, credString := func(connectionString []string) (string, string) {
 			if len(connectionString) > 1 {
 				hostString := connectionString[0]
@@ -148,7 +106,7 @@ func doList(ipinfo chan IPinfo, lines []string) {
 			port:       port,
 			user:       user,
 			pass:       pass,
-			alert:      Alert,
+			alert:      *Conf.Alert,
 		}
 		ipinfo <- info
 		time.Sleep(time.Millisecond)
@@ -170,10 +128,6 @@ func clearScreen() {
 // Handler for TCP
 // Parses config options and handles as necessary
 func Handler(lines []string) {
-	if *Conf.OutputFile == "" {
-		fmt.Println("You MUST specify an output file via '-out [/path/to/file]'")
-		return
-	}
 	timeStart := time.Now()
 	qLength := len(lines)
 	if len(*Conf.List) > 0 || len(*Conf.Cidr) > 0 {
@@ -186,9 +140,10 @@ func Handler(lines []string) {
 		chSuccess := make(chan int, len(lines))
 		if *Conf.SSH || *Conf.Port == "22" {
 			go SSHPreflight(chSuccess, ipInfo)
-			for i := 1; i <= len(lines); i++ {
+			i := 0
+			for successes := range chSuccess {
+				i++
 				percent := (float64(i) / float64(qLength)) * 100
-				successes := <-chSuccess
 				timeElapsed := time.Duration(time.Now().Sub(timeStart))
 				//clearScreen()
 				fmt.Print("Start date:\t\t" + timeStart.Format(time.RFC1123) + "\n")
@@ -215,7 +170,7 @@ func Handler(lines []string) {
 				user := info.user
 				pass := info.pass
 				alert := info.alert
-				TelnetPreflight(hostString, ip, port, user, pass, alert, OutputFile)
+				TelnetPreflight(hostString, ip, port, user, pass, alert, *Conf.OutputFile)
 			}
 		}
 		return

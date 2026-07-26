@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/HDN-1D10T/divinity/src/util"
 )
 
 const clear = "\033[2K"
@@ -16,6 +18,7 @@ func psWorker(host string, port string, results chan string) {
 		results <- host
 		conn.SetReadDeadline(time.Now().Add(time.Second))
 		conn.Close()
+		return
 	}
 	results <- "None"
 }
@@ -41,9 +44,9 @@ func ScanMulti(ips []string, port string) {
 			continue
 		}
 		if *Conf.IPOnly {
-			fmt.Printf("%s%s\n", clear, host)
+			util.LogWrite(host)
 		} else {
-			fmt.Printf("%s%s:%s open\n", clear, host, port)
+			util.LogWrite(fmt.Sprintf("%s:%s open", host, port))
 		}
 	}
 }

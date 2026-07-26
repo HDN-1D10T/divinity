@@ -16,14 +16,6 @@ import (
 
 var m = sync.RWMutex{}
 
-func makeCreds(credentials, user, pass string) string {
-	if len(credentials) > 0 {
-		return credentials
-	}
-	var creds = user + ":" + pass
-	return creds
-}
-
 // DoHTTPLogin checks for default credentials against an HTTP/HTTS endpoint
 func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 	m.RLock()
@@ -41,15 +33,12 @@ func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 		},
 	}
-	protocol := *Conf.Protocol
-	port := *Conf.Port
-	path := *Conf.Path
-	method := *Conf.Method
+	protocol := strings.ToLower(*Conf.Protocol)
+	port := httpPort(protocol, *Conf.Port)
+	path := httpPath(*Conf.Path)
+	method := strings.ToUpper(*Conf.Method)
 	basicAuth := *Conf.BasicAuth
 	basicAuth = base64.StdEncoding.EncodeToString([]byte(basicAuth))
-	user := *Conf.Username
-	pass := *Conf.Password
-	credentials := *Conf.Credentials
 	contentType := *Conf.ContentType
 	headerName := *Conf.HeaderName
 	headerValue := *Conf.HeaderValue
@@ -57,8 +46,6 @@ func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 	success := *Conf.Success
 	alert := *Conf.Alert
 	urlString := protocol + "://" + ip + ":" + port + path
-	creds := makeCreds(credentials, user, pass)
-	user, pass = GetCreds(creds)
 	log.Println("Trying " + ip + " ...")
 	// HTTP Request
 	req, err := http.NewRequest(method, urlString, strings.NewReader(data))
@@ -105,4 +92,28 @@ func DoHTTPLogin(ip string, wg *sync.WaitGroup) {
 		msg := ip + "\t" + alert
 		util.LogWrite(msg)
 	}
+}
+
+func httpPort(protocol, port string) string {
+	if len(port) > 0 {
+		return port
+	}
+	switch protocol {
+	case "http":
+		return "80"
+	case "https":
+		return "443"
+	default:
+		return port
+	}
+}
+
+func httpPath(path string) string {
+	if len(path) == 0 {
+		return "/"
+	}
+	if strings.HasPrefix(path, "/") {
+		return path
+	}
+	return "/" + path
 }

@@ -27,12 +27,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"regexp"
 	"runtime"
-	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/HDN-1D10T/divinity/src/util"
@@ -67,12 +66,11 @@ func getIPsFromCIDR(cidr string) ([]string, error) {
 	var ips []string
 	allIPs := regexp.MustCompile(`/0$`)
 	if allIPs.MatchString(cidr) {
-		err := "You can't pass a /0. Give me something I can handle."
-		log.Fatal(err)
+		return nil, fmt.Errorf("you can't pass a /0. Give me something I can handle")
 	}
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
 		ips = append(ips, ip.String())
@@ -86,8 +84,15 @@ func getIPsFromCIDR(cidr string) ([]string, error) {
 }
 
 func mScan(cidr string) {
+	conf := Configuration{
+		config.ParseConfiguration(),
+	}
+	ports := *conf.Port
+	if len(ports) == 0 {
+		ports = "0-65535"
+	}
 	m := masscan.New()
-	m.SetPorts("0-65535")
+	m.SetPorts(ports)
 	m.SetRanges(cidr)
 	m.SetRate("2000")
 	m.SetExclude("127.0.0.1")
@@ -102,8 +107,15 @@ func mScan(cidr string) {
 		return
 	}
 	for _, result := range results {
-		fmt.Println(result)
+		for _, port := range result.Ports {
+			msg := fmt.Sprintf("%s:%s", result.Address.Addr, port.Portid)
+			util.LogWrite(msg)
+		}
 	}
+}
+
+func isStdin(value string) bool {
+	return value == "-" || strings.EqualFold(value, "stdin")
 }
 
 func cidrFromStdin() (ips []string) {
@@ -156,7 +168,7 @@ func processList(ips []string) {
 	listIPs := *conf.ListIPs
 	cidr := *conf.Cidr
 	masscan := *conf.Masscan
-	protocol := *conf.Protocol
+	protocol := strings.ToLower(*conf.Protocol)
 	scan := *conf.Scan
 	outputFile := *conf.OutputFile
 	chIPs := make(chan string, len(ips))
@@ -182,13 +194,7 @@ func processList(ips []string) {
 	}
 	if *conf.Routes {
 		asns := ips
-		routes := tcp.GetAllRoutes(asns)
-		for _, route := range routes {
-			if len(outputFile) > 0 {
-				util.FileWrite(route + "\n")
-			}
-			fmt.Println(route)
-		}
+		tcp.GetAllRoutes(asns)
 		return
 	}
 	// -scanfast && -port
@@ -246,18 +252,19 @@ func main() {
 		return
 	}
 	// Process list from CIDR range
-	if len(cidr) == 1 || cidr == "stdin" {
+	if isStdin(cidr) {
 		ips := cidrFromStdin()
 		processList(ips)
 		return
 	}
-	if len(cidr) > 5 && len(cidr) < 19 {
-		ips, _ := getIPsFromCIDR(cidr)
+	if len(cidr) > 0 {
+		ips, err := getIPsFromCIDR(cidr)
+		util.PanicErr(err)
 		processList(ips)
 		return
 	}
 	// Process list from stdin
-	if len(list) == 1 || list == "stdin" {
+	if isStdin(list) {
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Split(bufio.ScanLines)
 		var ips []string
@@ -307,9 +314,7 @@ func main() {
 		}
 		pageRange := makeRange(1, *conf.Pages)
 		for _, num := range pageRange {
-			pageStr := strconv.Itoa(num)
-			query := shodanSearch + "&page=" + pageStr
-			hostSearch, err := s.HostSearch(query)
+			hostSearch, err := s.HostSearchPage(shodanSearch, num)
 			util.PanicErr(err)
 			// Run config from command line arguments:
 			if ipsOnly {
@@ -338,9 +343,7 @@ func main() {
 			info.ScanCredits)
 		pageRange := makeRange(1, *conf.Pages)
 		for _, num := range pageRange {
-			pageStr := strconv.Itoa(num)
-			query := shodanSearch + "&page=" + pageStr
-			hostSearch, err := s.HostSearch(query)
+			hostSearch, err := s.HostSearchPage(shodanSearch, num)
 			util.PanicErr(err)
 			// wg.Add(len(hostSearch.Matches))
 			for _, host := range hostSearch.Matches {

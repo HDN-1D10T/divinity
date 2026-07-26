@@ -12,16 +12,20 @@ import (
 type Configuration struct{ config.Options }
 
 var (
-	conf       = Configuration{config.ParseConfiguration()}
-	outputFile = *conf.OutputFile
+	conf = Configuration{config.C}
 )
+
+func outputFile() string {
+	return *conf.OutputFile
+}
 
 // FileWrite Helper Utility:
 // Creates a file if it doesn't already exist
 // Appends string to the file
 func FileWrite(msg string) {
-	if len(outputFile) > 0 {
-		f, err := os.OpenFile(outputFile,
+	file := outputFile()
+	if len(file) > 0 {
+		f, err := os.OpenFile(file,
 			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Println(err)
@@ -45,9 +49,10 @@ func FileWrite(msg string) {
 // Prints string to stdout and appends to file
 // File will be created if it doesn't exist
 func LogWrite(msg string) {
-	if len(outputFile) > 0 {
+	file := outputFile()
+	if len(file) > 0 {
 		fmt.Println(msg)
-		f, err := os.OpenFile(outputFile,
+		f, err := os.OpenFile(file,
 			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Println(err)

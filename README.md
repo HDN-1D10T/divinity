@@ -1,155 +1,420 @@
-![enter image description here](https://img.shields.io/badge/platform-ALL-green)
-# HAKDEFNET / 1D10T's Project Divinity
+![THE WORD](./logo.png?raw=true)
 
-**Divinity** is an ever-expanding HDN-Offensive Security Framework that can be used for multiple security research purposes.
-It *can integrate with online search tools, but does not rely* on them.  An example of one of those services is **Shodan** for some of its features,
-with the main function of which is to test over HTTP/HTTPS and report IPs that are using **default credentials**. 
+![platform](https://img.shields.io/badge/platform-ALL-green)
 
-Many people install basic and advanced services like NetScaler, SAP, Firewalls and Routers without changing default passwords,
-this fact makes all these implementations faulty and vulnerable to very simple attacks. Any scriptkiddie with a hacking GUI based tool
-or pentesting image can search known lists and break into your devices easily without any real knowledge.
-We wanted to level the playing field here as many critical infrastructure systems also have the same problems and this needs to stop
-(config errors, using standard credentials) because this is irresponsible and unsafe in this period of cyber warfare and espionage.
+# Project Divinity by HAKDEFNET / 1D10T / PHX
 
-We hope that by making this public, we can help people to test thier own systems using this opensource framework, which we decided
-to release to the world in an effort to make it better and widely-used in order to increase security awareness, and hopefully security itself.
+**Divinity** is an HDN offensive security framework for authorized security research and internal defensive validation. It can work from local target lists, CIDR ranges, piped input, or Shodan search results. Its main tested workflows are:
 
-It is our hope that anyone who uses this tool also adds functionality and gives credit for the work we are investing into this project.
-If you would like to know more about Hakdefnet, then check out the site at [https://hakdefnet.org](https://hakdefnet.org). 
+- Building target lists from scans, CIDR ranges, Shodan, or ASN route lookups.
+- Checking HTTP/HTTPS endpoints for default or known credentials.
+- Checking SSH and Telnet services for default or known credentials.
+- Saving results so scans and credential checks can be chained without repeating discovery work.
 
-Enjoy and contribute!
+Use Divinity only on systems you own or have explicit permission to test.
 
-*-- Your 1D10T / PHX / HDN Team*
+The original project goal is still the same: expose weak deployments that use default or standard credentials so operators can find and fix them before someone else does.
 
 ## Installation
 
-`go install github.com/HDN-1D10T/divinity@latest`
-
-## Ways to run Divinity
-- **local JSON config file** (specified by `-config [FILE PATH]`)
-- **remote JSON config file** (specified by `-webconfig [URL]`)
-- **command line parameters** (which will *override* any duplicate parameters if config is also specified) 
----
-### Configuration Parameters:
-|Normal Parameters |Value Description|                   
-|----------------|-----------------|
-|`-config`|path to a JSON config file   |
-|`-webconfig`|URL to a JSON config file    |
-|`-list`|path to list in format `IP`, `IP<:PORT>`, or `IP<:PORT> <USER:PASS>`|
-|`-list -` or `-list stdin`|allows processing from `stdin` instead of file)|
-|`-cidr`|specify a CIDR range of IP addresses to run login tests or scan against|
-|`-out`|specify file name or file path to save results 
-|`-protocol`|specify if login target uses `HTTP`, `HTTPS`, or generic `TCP`|
-|`-port`|specify port used by login target|
-|`-path`|specify URL path to login page (default: `"/"`)|
-|`-method`|specify HTTP method (usually `GET` or `POST`)|
-|`-basic-auth`|if basic auth is needed, value should be plain-text `username:password` format|
-|`-creds`|same as `-basic-auth`, except for TCP|
-|`-user`|username|
-|`-pass`|password|
-|`-content`|value of `Content-Type` header when used with `-method POST`|
-|`-data`|payload body when used with `-method POST`|
-|`-headername`|specify an additional HTTP request header name|
-|`-headervalue`|specify an additional HTTP request header value when used with `-headername [NAME]`|
-|`-success`|string to match on that *ONLY* appears in successful login response|
-|`-ssh`|force ssh connection over non-standard port|
-|`-telnet`|force telnet connection over non-standard port|
-|`-alert`|string to display when `-success` string is matched (default: `"SUCCESS"`)|
-|`-scan`|actively scan IP range (if used with -masscan, requires `sudo`, `masscan`, and `-cidr`)|
-|`-scanfast`|actively scan IP range (super fast, may be less accurate)|
-|`-all`|used with `-scan` - will scan all ports|
-|`-top`|used with `-scan` - will scan top ports|
-
----
-### Shodan Configuration Parameters (optional):
-If Shodan is used, you will need to set the environment variable `SHODAN_API_KEY=[your shodan API key]`.  
-This can be exported on the command line or sourced in your `~/.bashrc`, etc.
-
-|Parameters |Value Description|                   
-|-----------|-----------------|
-|`-query`   |Shodan search string|
-|`-pages`   |Number `[type: int]` of page results to display. Best practice is to use this flag manually as to not use unnecessary query credits (default: `1`)|
-|`-passive` |If this flag is set, only IPs along with associated countries will be displayed, without testing them for default credentials|
-|`-ips`     |If this flag is set, *ONLY* a list of IPs will be returned in the output that matches the `-query` value (requires `-passive`). This option is good for searching a large number of `-pages` along with the `-out` parameter set, so that you can later run the tool multiple times using the `-list` parameter without an additional increment to your Shodan query credits.
----
-## Example Configurations
-The following configurations can be referenced locally with the `-config` parameter or hosted remotely and referenced with the `-webconfig` parameter.  Command line parameters will override any existing parameters included in the JSON configurations.
-
-#### Basic-Auth GET Request (Device Manufacturer A):
-- The following configuration would search for "Device Manufacturer A" listening on port 80 at `http://[IP ADDRESS]/login.html` and would return 1 page of Shodan results containing 100 IPs.
-- An HTTP GET request would be sent with basic authentication with the credentials `admin:password` to all 100 IPs from the results.
-- If the string `authenticated.html` is found in the HTTP response, the alert `*** DEFAULT CREDENTIALS ***` will be displayed next to the IP address in the output.
-
+```sh
+go install github.com/HDN-1D10T/divinity@latest
 ```
+
+From a local checkout:
+
+```sh
+go run .
+```
+
+or build a binary:
+
+```sh
+go build -o divinity .
+```
+
+## Configuration Order
+
+Divinity can be configured three ways:
+
+1. Defaults built into the tool.
+2. A JSON config from `-config` or `-webconfig`.
+3. Explicit command-line flags.
+
+Command-line flags override duplicate values from JSON config files. If both `-config` and `-webconfig` are supplied, the local `-config` file is used.
+
+There are no positional arguments. Put every option behind a flag such as `-cidr`, `-list`, `-protocol`, or `-port`.
+
+## Quick Patterns
+
+Check an HTTP endpoint list with Basic Auth:
+
+```sh
+divinity -list targets.txt -protocol http -port 80 -path /login.html -basic-auth admin:password -success authenticated.html
+```
+
+Check a CIDR for Telnet default credentials and save successful logins:
+
+```sh
+divinity -cidr 192.168.1.0/24 -protocol tcp -port 23 -creds admin:admin -out telnet-defaults.txt
+```
+
+Scan for hosts with port 23 open, then feed the host list into a credential check:
+
+```sh
+divinity -scan -cidr 192.168.1.0/24 -port 23 -out telnet-hosts.txt
+divinity -list telnet-hosts.txt -protocol tcp -port 23 -creds admin:admin -out telnet-defaults.txt
+```
+
+Pipe scan output directly into a credential check:
+
+```sh
+divinity -scan -cidr 192.168.1.0/24 -port 23 | divinity -protocol tcp -port 23 -creds admin:admin -list - -out telnet-defaults.txt
+```
+
+Export Shodan IPs without credential checks:
+
+```sh
+divinity -query "Device Manufacturer B port:8443" -pages 5 -passive -ips -out manufacturer-b-ips.txt
+```
+
+## Inputs
+
+### `-list`
+
+`-list` reads one target per line from a file:
+
+```text
+192.0.2.10
+192.0.2.11:23
+192.0.2.12 admin:admin
+192.0.2.13:2222 root:toor
+```
+
+Use `-list -` or `-list stdin` to read targets from standard input.
+
+Inline ports are useful when targets use mixed ports. A global `-port` overrides inline ports.
+
+### `-cidr`
+
+`-cidr` expands an IPv4 CIDR range:
+
+```sh
+divinity -cidr 10.2.2.0/24 -list-ips
+```
+
+`/32` produces the single host. `/0` is rejected intentionally. For normal network ranges, Divinity skips the network and broadcast addresses.
+
+Use `-cidr -` or `-cidr stdin` to read CIDR ranges from standard input.
+
+To expand CIDRs stored in a file, use `-cidr list` with `-list`:
+
+```sh
+divinity -cidr list -list cidrs.txt -list-ips -out expanded-ips.txt
+```
+
+## Option Reference
+
+| Flag | JSON key | Type | Description |
+| --- | --- | --- | --- |
+| `-config` | none | string | Path to a local JSON config file. |
+| `-webconfig` | none | string | URL to a remote JSON config file. Ignored when `-config` is also set. |
+| `-out` | `out` | string | File to append results to. Results also print to stdout in most modes. |
+| `-list` | `list` | string | Target list path, `-`, or `stdin`. |
+| `-cidr` | `cidr` | string | IPv4 CIDR range, `-`, `stdin`, or `list` when expanding CIDRs from `-list`. |
+| `-list-ips` | `list-ips` | bool | Print expanded IPs from `-cidr` or `-cidr list -list`. |
+| `-protocol` | `protocol` | string | `http`, `https`, or `tcp`. Input is case-insensitive. |
+| `-port` | `port` | string | Target port. Overrides inline ports in `-list`. HTTP defaults to `80`; HTTPS defaults to `443`. |
+| `-path` | `path` | string | HTTP path. Default is `/`; missing leading slash is added automatically. |
+| `-method` | `method` | string | HTTP method. Default is `GET`; input is uppercased before use. |
+| `-basic-auth` | `basic-auth` | string | Plain-text HTTP Basic Auth value, formatted as `username:password`. Divinity base64-encodes it for the request. |
+| `-content` | `content` | string | HTTP `Content-Type` header, usually with `-method POST`. |
+| `-data` | `data` | string | HTTP request body, usually with `-method POST`. |
+| `-headername` | `headername` | string | Additional HTTP request header name. |
+| `-headervalue` | `headervalue` | string | Additional HTTP request header value. Used with `-headername`. |
+| `-success` | `success` | string | String to match in the HTTP response body or response headers. |
+| `-alert` | `alert` | string | Text shown next to successful results. Default: `SUCCESS`. |
+| `-creds` | `creds` | string | TCP credential pair, formatted as `username:password`. Passwords may contain additional `:` characters. |
+| `-user` | `user` | string | TCP username. Overrides `-creds` and per-line credentials when set. |
+| `-pass` | `pass` | string | TCP password. Overrides `-creds` and per-line credentials when set. |
+| `-ssh` | `ssh` | bool | Force SSH checks on a non-standard port. Use with `-port` or inline `IP:PORT` targets. |
+| `-telnet` | `telnet` | bool | Force Telnet checks on a non-standard port. Use with `-port` or inline `IP:PORT` targets. |
+| `-timeout` | `timeout` | int | Timeout in milliseconds for Telnet and `-scanfast` TCP checks. Default: `500`. |
+| `-scan` | `scan` | bool | Run the native scanner, or masscan when paired with `-masscan`. |
+| `-scanfast` | `scanfast` | bool | Fast multi-host single-port scanner. Requires `-port`. |
+| `-all` | `all` | bool | With native `-scan`, scan ports `1-65535`. |
+| `-top` | `top` | bool | With native `-scan`, scan the built-in top port list. |
+| `-masscan` | `masscan` | bool | With `-scan`, use the external `masscan` binary. Requires `masscan` and usually root/sudo privileges. |
+| `-query` | `query` | string | Shodan search query. |
+| `-pages` | `pages` | int | Number of Shodan result pages to request. Default: `1`. |
+| `-passive` | `passive` | bool | Query Shodan and print results without credential checks. |
+| `-ips` | `ips` | bool | With `-passive`, print only IPs. |
+| `-routes` | `routes` | bool | Query RADB whois for IPv4 CIDR routes from `-asn` or ASNs in `-list`. |
+| `-asn` | `asn` | string | ASN for `-routes`. Accepts `12345` or `AS12345`. |
+
+Unknown JSON keys are ignored with a warning. JSON values must use the types shown above.
+
+## JSON Configuration
+
+JSON config keys match the option names without the leading dash. For example:
+
+```json
 {
-    "query": "Device Manufacturer A port:80",
-    "protocol": "http",
-    "port": "80",
-    "path": "/login.html",
-    "method": "GET",
-    "basic-auth": "admin:password",
-    "success": "authenticated.html",
-    "alert": "*** DEFAULT CREDENTIALS ***"
+  "protocol": "https",
+  "port": "8443",
+  "path": "/data/login",
+  "method": "POST",
+  "basic-auth": "admin:password",
+  "content": "application/x-www-form-urlencoded",
+  "data": "username=admin&password=password",
+  "success": "<authResult>0</authResult>",
+  "alert": "*** DEFAULT CREDENTIALS ***"
 }
 ```
 
-#### POST Request (Device Manufacturer B):
-- The following configuration would search for "device manufacturer 2" listening on port 8443 at `https://[IP ADDRESS]:8443/data/login` and would return 1 page of results, containing 100 IPs.
-- An HTTP POST request would be sent with the credentials `admin:password` as form data to all 100 IPs.
-- If the string `<authResult>0</authResult>` is found in the HTTP response, the alert `SUCCESS` will be displayed next to the IP address in the output (since `-alert` has a default value of `SUCCESS`, it doesn't have to be explicitly specified in the configuration.
+Run it locally:
 
+```sh
+divinity -config /path/to/device.json -cidr 10.2.2.0/24 -out defaults.txt
 ```
+
+Override a JSON value on the command line:
+
+```sh
+divinity -config /path/to/device.json -port 9443 -cidr 10.2.2.0/24
+```
+
+In this example, `-port 9443` wins over the `port` value inside the config file.
+
+## HTTP/HTTPS Credential Checks
+
+HTTP checks are selected with `-protocol http` or `-protocol https`. Divinity builds one request per target:
+
+```sh
+divinity -list targets.txt -protocol https -port 8443 -path /login -method POST -content application/x-www-form-urlencoded -data "user=admin&pass=password" -success "Welcome"
+```
+
+Behavior notes:
+
+- `-method` defaults to `GET`.
+- `-path` defaults to `/`.
+- `http` defaults to port `80` and `https` defaults to port `443` when `-port` is omitted.
+- `-basic-auth` is for HTTP Basic Auth only.
+- `-creds`, `-user`, and `-pass` are TCP credential options, not HTTP form fillers.
+- If `-success` is set, Divinity logs the target only when that string appears in the response body or headers.
+- If `-success` is omitted but `-basic-auth` is set, a `200 OK` response is treated as success.
+
+### Basic Auth GET Example
+
+```json
 {
-    "query": "Device Manufacturer B port:8443",
-    "protocol": "https",
-    "port": "8443",
-    "path": "/data/login",
-    "method": "POST",
-    "basic-auth": "admin:password",
-    "content": "application/x-www-form-url-encoded",
-    "success": "<authResult>0</authResult>"
+  "query": "Device Manufacturer A port:80",
+  "protocol": "http",
+  "port": "80",
+  "path": "/login.html",
+  "method": "GET",
+  "basic-auth": "admin:password",
+  "success": "authenticated.html",
+  "alert": "*** DEFAULT CREDENTIALS ***"
 }
 ```
-#### Example - Check 500 individual  results from Device Manufacturer B for default credentials:
-Let's say you wanted to get 500 individual IP results from Device Manufacturer B, and you have the config stored in a directory on the web along with additional configs you have created for finding different devices.  You want to store these IPs for later use without increasing your Shodan API query credits.
 
-You could use the following command to save a list of just the IP addresses to subsequently feed back into the application using the `-list` parameter, which would override the call to the Shodan API on the second run:
+```sh
+divinity -config manufacturer-a.json -cidr 192.0.2.0/24 -out manufacturer-a-defaults.txt
+```
 
-`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -passive -ips -out manufacturer_b_ips.txt`
+### POST Example
 
-If you wanted to do everything in one go, just make sure to save your results with the `-out` parameter.  Let's also say that you want to include the text `*** DEFAULT ***` next to the successful attempts.  The output file will include only the IPs with successful default logins.
+```json
+{
+  "query": "Device Manufacturer B port:8443",
+  "protocol": "https",
+  "port": "8443",
+  "path": "/data/login",
+  "method": "POST",
+  "content": "application/x-www-form-urlencoded",
+  "data": "username=admin&password=password",
+  "success": "<authResult>0</authResult>"
+}
+```
 
-`divinity -webconfig http://example.com/divinity_configs/device-manufacturer-b.json -pages 5 -alert "*** DEFAULT ***" -out manufacturer_b_default_creds.txt`
+```sh
+divinity -config manufacturer-b.json -cidr 10.2.2.0/24 -alert "*** DEFAULT ***" -out manufacturer-b-defaults.txt
+```
 
-#### Shodan-less Example - Check internal app tier for default credentials:
-Let's say you have a numerous applications running a specific framework for which you have created a configuration file.  These applications are running in your DMZ on the 10.2.2.0/24 network.  As long as you have access to these applications, you can run the following command to test for default credentials:
+## TCP Credential Checks
 
-`divinity -config /path/to/app.json -cidr 10.2.2.0/24 -out dmz_default_creds.txt`
+`-protocol tcp` currently routes credential checks through the SSH and Telnet handlers. There is not a separate generic raw TCP authentication workflow in the code.
 
-## Portscanning
-**Note:** `masscan` integration is not complete and is a work in progress.  There are also plans to implement `nmap` integration.  Both of these require spawning OS processes that require these utilities to be installed,
-and additionally require `sudo` or root-level permission.
+Credential precedence for TCP is:
 
-That being said, there is a native golang portscanner implemented directly in this project, and it works quite well.  Additionally, it doesn't require root-level permissions to do its thing, *and it does its thing very efficiently*.
+1. `-user` and/or `-pass`
+2. `-creds`
+3. Per-line credentials from `-list`
 
-When scanning for a single port, `divinity` can knock out a /24 in around 2 minutes.  That's over the Internet.  But of course, you would only use this tool on local networks...
+Standard ports are selected by `-port`:
 
-### Scan Example
+```sh
+divinity -cidr 192.168.1.0/24 -protocol tcp -port 23 -creds admin:admin
+divinity -cidr 192.168.1.0/24 -protocol tcp -port 22 -creds root:root
+```
 
-Let's say you wanted to find a list of IPs on a local network that were running Telnet servers.  You want to create a list of these IPs to feed back into `divinity` and test for default credentials `admin:admin`.
+Use `-telnet` or `-ssh` for non-standard ports:
 
-#### Create your list:
+```sh
+divinity -list telnet-custom.txt -protocol tcp -telnet -creds admin:admin
+divinity -list ssh-custom.txt -protocol tcp -ssh -creds root:toor
+```
 
-`divinity -scan -cidr 192.168.1.0/24 -port 23 -out telnet.txt`
+`telnet-custom.txt` can contain:
 
-#### Feed your list back in to check for default creds:
+```text
+192.0.2.10:2323
+192.0.2.11:2023 admin:admin
+```
 
-`divinity -list telnet.txt -protocol tcp -port 23 -out default_creds.txt`
+`ssh-custom.txt` can contain:
 
-#### If you want, just feed the `stdout` to `stdin`
+```text
+192.0.2.20:2222
+192.0.2.21:2200 root:toor
+```
 
-`divinity -scan -cidr 192.168.1.0/24 -port 23 | divinity -protocol tcp -port 23 -creds admin:admin -list - -out default_creds.txt`
+## Scanning
 
-#### Check for default creds whether host is listening or not:
+### Native Scanner
 
-`divinity -cidr 192.168.1.0/24 -protocol tcp -port 23 -creds root:root`
+Scan a single port across a CIDR:
+
+```sh
+divinity -scan -cidr 192.168.1.0/24 -port 23 -out telnet-hosts.txt
+```
+
+Single-port native scans output plain IPs, which are convenient to feed back into credential checks.
+
+Scan default ports `1-1024`:
+
+```sh
+divinity -scan -cidr 192.168.1.0/24 -out open-ports.txt
+```
+
+Scan all ports:
+
+```sh
+divinity -scan -cidr 192.168.1.0/24 -all -out all-open-ports.txt
+```
+
+Scan the built-in top port list:
+
+```sh
+divinity -scan -cidr 192.168.1.0/24 -top -out top-open-ports.txt
+```
+
+Multi-port scans output `IP:PORT`.
+
+### Fast Single-Port Scanner
+
+`-scanfast` is a faster single-port check for many hosts:
+
+```sh
+divinity -scanfast -cidr 192.168.1.0/24 -port 443 -out https-open.txt
+```
+
+Use `-ips` to print only IPs:
+
+```sh
+divinity -scanfast -cidr 192.168.1.0/24 -port 443 -ips -out https-ips.txt
+```
+
+`-timeout` controls the TCP dial timeout in milliseconds.
+
+### Masscan
+
+Masscan integration is intentionally thin and still depends on the external `masscan` binary:
+
+```sh
+sudo divinity -scan -masscan -cidr 192.168.1.0/24 -port 80 -out masscan-80.txt
+```
+
+When `-port` is omitted, Divinity asks masscan to scan `0-65535`. Native `-top` selection does not currently apply to masscan.
+
+## Shodan
+
+Set your Shodan API key first:
+
+```sh
+export SHODAN_API_KEY=your-shodan-api-key
+```
+
+Passive mode prints Shodan results without credential checks:
+
+```sh
+divinity -query "Device Manufacturer B port:8443" -pages 5 -passive
+```
+
+Print only IPs and save them for later:
+
+```sh
+divinity -query "Device Manufacturer B port:8443" -pages 5 -passive -ips -out manufacturer-b-ips.txt
+```
+
+Active Shodan mode uses the Shodan result IPs as HTTP/HTTPS credential-check targets:
+
+```sh
+divinity -config manufacturer-b.json -query "Device Manufacturer B port:8443" -pages 5 -out manufacturer-b-defaults.txt
+```
+
+Best practice: use `-passive -ips -out` for large Shodan exports, then run credential checks from `-list` so you do not spend query credits repeatedly.
+
+## ASN Route Lookup
+
+Look up IPv4 routes for one ASN:
+
+```sh
+divinity -routes -asn AS12345 -out routes.txt
+```
+
+The `AS` prefix is optional:
+
+```sh
+divinity -routes -asn 12345
+```
+
+Look up routes for multiple ASNs from a file:
+
+```sh
+divinity -routes -list asns.txt -out routes.txt
+```
+
+`asns.txt` can contain:
+
+```text
+AS12345
+AS64496
+64500
+```
+
+## Output Behavior
+
+`-out` appends to the target file; it does not truncate existing files.
+
+Most modes print to stdout and append to `-out` when set. Some scanner output is intentionally formatted for piping:
+
+- `-scan -port PORT` prints plain IPs.
+- `-scan` without `-port`, `-scan -all`, and `-scan -top` print `IP:PORT`.
+- `-scanfast -ips` prints plain IPs.
+- `-scanfast` without `-ips` prints `IP:PORT open`.
+
+## Development
+
+Run tests with a writable Go build cache if your environment restricts writes to the default cache:
+
+```sh
+GOCACHE=/private/tmp/divinity-gocache go test ./...
+```
+
+Run vet:
+
+```sh
+GOCACHE=/private/tmp/divinity-gocache go vet ./...
+```

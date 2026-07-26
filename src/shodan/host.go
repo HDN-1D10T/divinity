@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 type HostLocation struct {
@@ -39,9 +41,11 @@ type HostSearch struct {
 }
 
 func (s *Client) HostSearch(q string) (*HostSearch, error) {
-	res, err := http.Get(
-		fmt.Sprintf("%s/shodan/host/search?key=%s&query=%s", BaseURL, s.apiKey, q),
-	)
+	return s.HostSearchPage(q, 1)
+}
+
+func (s *Client) HostSearchPage(q string, page int) (*HostSearch, error) {
+	res, err := http.Get(s.hostSearchURL(q, page))
 	if err != nil {
 		return nil, err
 	}
@@ -53,4 +57,14 @@ func (s *Client) HostSearch(q string) (*HostSearch, error) {
 	}
 
 	return &ret, nil
+}
+
+func (s *Client) hostSearchURL(q string, page int) string {
+	params := url.Values{}
+	params.Set("key", s.apiKey)
+	params.Set("query", q)
+	if page > 0 {
+		params.Set("page", strconv.Itoa(page))
+	}
+	return fmt.Sprintf("%s/shodan/host/search?%s", BaseURL, params.Encode())
 }

@@ -1,7 +1,9 @@
 package tcp
 
 import (
+	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/HDN-1D10T/divinity/src/util"
@@ -10,89 +12,65 @@ import (
 
 // SSHPreflight - checks if we want to use the SSH protocol and on which port
 func SSHPreflight(chSuccess chan int, ipInfo chan IPinfo) {
+	defer close(chSuccess)
 	var successCount = 0
-	for info := range ipInfo {
-		hostString := info.hostString
-		ip := info.ip
-		port := info.port
-		user := info.user
-		pass := info.pass
-		alert := info.alert
-		doSSH, sshport := func() (bool, string) {
-			if port == "22" {
-				return true, port
-			}
-			if len(strings.Split(hostString, ":")) > 1 {
-				port = strings.Split(hostString, ":")[1]
-				port = strings.Replace(hostString, " ", "", -1)
-				return true, port
-			}
-			if *Conf.SSH {
-				return true, port
-			}
-			return false, ""
-		}()
-		if doSSH {
-			go func() {
-				sshConfig := &ssh.ClientConfig{
-					User: user,
-					Auth: []ssh.AuthMethod{
-						ssh.Password(pass),
-					},
-					//Timeout: time.Duration(*Conf.Timeout) * time.Millisecond,
-					Timeout:         time.Duration(5 * time.Second),
-					HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	results := make(chan bool)
+	var wg sync.WaitGroup
+
+	go func() {
+		for info := range ipInfo {
+			wg.Add(1)
+			go func(info IPinfo) {
+				defer wg.Done()
+				doSSH, sshport := shouldSSH(info)
+				if !doSSH {
+					results <- false
+					return
 				}
-				//fmt.Print("Trying " + ip + ":" + sshport + " " + user + ":" + pass + "...\033[K\r")
-				conn, _ := ssh.Dial("tcp", ip+":"+sshport, sshConfig)
-				//time.Sleep(time.Duration(*Conf.Timeout) * time.Millisecond)
-				if conn != nil {
-					// start session
-					sess, err := conn.NewSession()
-					status := func() bool {
-						if err != nil {
-							return false
-						}
-						if sess != nil {
-							// run single command
-							err = sess.Run("uptime")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("ps")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("ifconfig")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("show help")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("?")
-							if err == nil {
-								return true
-							}
-							err = sess.Run("ipconfig")
-							if err == nil {
-								return true
-							}
-						}
-						return false
-					}()
-					if status {
-						successCount += 1
-						msg := ip + ":" + sshport + " " + user + ":" + pass + " " + alert + "\n"
-						//fmt.Print("\033[K\r" + msg)
-						util.FileWrite(msg)
-						sess.Close()
-					}
-					conn.Close()
+				if trySSH(info.ip, sshport, info.user, info.pass) {
+					msg := fmt.Sprintf("%s:%s %s:%s %s", info.ip, sshport, info.user, info.pass, info.alert)
+					util.LogWrite(msg)
+					results <- true
+					return
 				}
-			}()
+				results <- false
+			}(info)
+		}
+		wg.Wait()
+		close(results)
+	}()
+
+	for ok := range results {
+		if ok {
+			successCount += 1
 		}
 		chSuccess <- successCount
 	}
+}
+
+func shouldSSH(info IPinfo) (bool, string) {
+	if info.port == "22" || *Conf.Port == "22" {
+		return true, info.port
+	}
+	if strings.Contains(info.hostString, ":") && len(info.port) > 0 {
+		return *Conf.SSH, info.port
+	}
+	return *Conf.SSH && len(info.port) > 0, info.port
+}
+
+func trySSH(ip, port, user, pass string) bool {
+	sshConfig := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(pass),
+		},
+		Timeout:         5 * time.Second,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+	conn, err := ssh.Dial("tcp", ip+":"+port, sshConfig)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }

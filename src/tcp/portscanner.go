@@ -37,7 +37,13 @@ func Scan(host string) {
 
 	// Single Port
 	if len(*Conf.Port) > 0 {
-		thePort, _ := strconv.Atoi(*Conf.Port)
+		thePort, err := strconv.Atoi(*Conf.Port)
+		if err != nil || thePort < 1 || thePort > 65535 {
+			fmt.Printf("invalid port: %s\n", *Conf.Port)
+			close(ports)
+			close(results)
+			return
+		}
 		ports <- thePort
 		port := <-results
 		if port != 0 {
@@ -55,12 +61,12 @@ func Scan(host string) {
 	// All Ports
 	if *Conf.All {
 		go func() {
-			for i := 1; i <= 65536; i++ {
+			for i := 1; i <= 65535; i++ {
 				ports <- i
 			}
 		}()
 
-		for i := 0; i < 65536; i++ {
+		for i := 0; i < 65535; i++ {
 			port := <-results
 			if port != 0 {
 				openports = append(openports, port)
